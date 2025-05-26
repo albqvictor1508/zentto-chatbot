@@ -11,3 +11,9 @@ whatsappClient.on("qr", (qr) => {
 whatsappClient.on("ready", () => {
     console.log("Client is ready!");
 })
+
+whatsappClient.on("message", msg => {
+    if(msg.body === "!ping") {
+        msg.reply("pong");
+    }
+})
