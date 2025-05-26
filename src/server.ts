@@ -17,3 +17,5 @@ whatsappClient.on("message", msg => {
         msg.reply("pong");
     }
 })
+
+whatsappClient.initialize();
