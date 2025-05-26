@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "tsx --env-file .env --watch index.ts"
+    "dev": "tsx --env-file .env --watch src/server.ts"
   },
   "keywords": [],
   "author": "",
@@ -15,5 +15,9 @@
     "chalk": "^5.4.1",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "fastify": "^5.3.3",
+    "whatsapp-web.js": "^1.28.0"
   }
 }
