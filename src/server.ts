@@ -7,6 +7,7 @@ import {
 	type ZodTypeProvider,
 } from "fastify-type-provider-zod";
 import qrcode from "qrcode-terminal";
+import { env } from "./common/env";
 
 const app = fastify().withTypeProvider<ZodTypeProvider>();
 
@@ -41,7 +42,7 @@ whatsappClient.on("message", (msg) => {
 	}
 });
 
-app.listen(env.PORT, () => {
+app.listen({ port: env.PORT }, () => {
 	console.log(chalk.greenBright("HTTP SERVER RUNNING!"));
 });
 
