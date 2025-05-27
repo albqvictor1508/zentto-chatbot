@@ -11,13 +11,6 @@ import { env } from "./common/env";
 
 const app = fastify().withTypeProvider<ZodTypeProvider>();
 
-function sendQrcode(qr: string) {
-	app.get("/qr", async (request, reply) => {
-		const generatedQrcode = qrcode.generate(qr, { small: true });
-		return reply.status(200).send(generatedQrcode);
-	});
-}
-
 app.setSerializerCompiler(serializerCompiler);
 app.setValidatorCompiler(validatorCompiler);
 
@@ -25,7 +18,7 @@ const whatsappClient = new Client({});
 
 whatsappClient.on("qr", (qr) => {
 	console.log("QR CODE RECEIVED", qr);
-	sendQrcode(qr);
+	qrcode.generate(qr, { small: true });
 });
 
 whatsappClient.on("ready", () => {
@@ -36,9 +29,6 @@ whatsappClient.on("message", (msg) => {
 	const body = msg.body.trim().toLowerCase();
 	if (body === "!ping") {
 		msg.reply("pong");
-	}
-	if (body === "!lexsa") {
-		msg.reply("te amo safada");
 	}
 });
 
