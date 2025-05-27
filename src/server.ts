@@ -5,6 +5,7 @@ import {
 	validatorCompiler,
 	type ZodTypeProvider,
 } from "fastify-type-provider-zod";
+import qrcode from "qrcode-terminal";
 
 const app = fastify().withTypeProvider<ZodTypeProvider>();
 
@@ -23,7 +24,7 @@ whatsappClient.on("ready", () => {
 
 whatsappClient.on("message", (msg) => {
 	const body = msg.body.trim().toLowerCase();
-	if (msg.body === "!ping") {
+	if (body === "!ping") {
 		msg.reply("pong");
 	}
 });
