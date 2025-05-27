@@ -12,7 +12,8 @@
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",
 		"@types/node": "^22.15.21",
-		"chalk": "^5.4.1"
+		"chalk": "^5.4.1",
+		"envalid": "^8.0.0"
 	},
 	"dependencies": {
 		"@types/qrcode-terminal": "^0.12.2",
