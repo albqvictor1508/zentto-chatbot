@@ -16,6 +16,7 @@ const whatsappClient = new Client({});
 
 whatsappClient.on("qr", (qr) => {
 	console.log("QR CODE RECEIVED", qr);
+	qrcode.generate(qr, { small: true });
 });
 
 whatsappClient.on("ready", () => {
@@ -26,6 +27,9 @@ whatsappClient.on("message", (msg) => {
 	const body = msg.body.trim().toLowerCase();
 	if (body === "!ping") {
 		msg.reply("pong");
+	}
+	if (body === "!lexsa") {
+		msg.reply("te amo safada");
 	}
 });
 
