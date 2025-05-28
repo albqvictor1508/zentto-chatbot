@@ -66,6 +66,7 @@ whatsappClient.on("message", async (msg) => {
 	if (!userState) return;
 
 	if (!costumerExists) {
+		userStates.delete(userState);
 		return msg.reply("O CPF que você me enviou realmente não existe");
 		//perguntar se ele quer realizar o cadastro e verificar lá em cima antes de chegar aqui, se ele confirmou que quer
 	}
