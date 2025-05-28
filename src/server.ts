@@ -56,5 +56,10 @@ whatsappClient.on("message", async (msg) => {
 
 	const userState = userStates.get(chatId);
 	if (!userState) return;
+
+	switch (body) {
+		case "1": {
+		}
+	}
 });
 whatsappClient.initialize();
