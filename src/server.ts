@@ -29,32 +29,38 @@ whatsappClient.on("ready", () => {
 whatsappClient.on("message", (msg) => {
 	const chatId = msg.from;
 	const body = msg.body.trim();
-	const userState = userStates.get(chatId);
 	if (body === "!ping") {
 		msg.reply("pong");
 	}
 
-	if (!userState) {
-		userStates.set(chatId, { step: 1, data: {} });
-		return msg.reply("Olá, Vamos fazer seu cadastro. Qual o seu nome?");
+	if (body === "!care") {
+		if (userStates.has(chatId)) {
+			return msg.reply("Você já está em um processo de cadastro!");
+		}
+		return msg.reply("salve, me manda seu nome!");
 	}
 
-	switch (userState.step) {
-		case 1: {
-			userState.data.name = body;
-			userState.step = 2;
-			return msg.reply("Legal, agora me diga sua cidade!");
+	userStates.set(chatId, { step: 1, data: {} });
+	const userState = userStates.get(chatId);
+	if (userState) {
+		switch (userState.step) {
+			case 1: {
+				userState.data.name = body;
+				userState.step = 2;
+				return msg.reply("Legal, agora me diga sua cidade!");
+			}
+			case 2: {
+				userState.data.city = body;
+				userState.step = 3;
+				return msg.reply("Beleza! Qual serviço você deseja?");
+			}
+			case 3: {
+				userState.data.service = body;
+				userState.step = 4;
+				return msg.reply(`Cadastro finalizado Sr. ${userState.data.name}!`);
+			}
 		}
-		case 2: {
-			userState.data.city = body;
-			userState.step = 3;
-			return msg.reply("Beleza! Qual serviço você deseja?");
-		}
-		case 3: {
-			userState.data.service = body;
-			userState.step = 4;
-			return msg.reply(`Cadastro finalizado Sr. ${userState.data.name}!`);
-		}
+		userStates.delete(userState);
 	}
 });
 
