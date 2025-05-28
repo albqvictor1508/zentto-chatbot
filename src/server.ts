@@ -34,14 +34,12 @@ whatsappClient.on("message", (msg) => {
 	}
 
 	if (body === "!care") {
-		if (userStates.has(chatId)) {
-			return msg.reply("Você já está em um processo de cadastro!");
-		}
+		console.log();
+		userStates.set(chatId, { step: 1, data: {} });
 		return msg.reply("salve, me manda seu nome!");
 	}
-
-	userStates.set(chatId, { step: 1, data: {} });
 	const userState = userStates.get(chatId);
+
 	if (userState) {
 		switch (userState.step) {
 			case 1: {
@@ -52,9 +50,22 @@ whatsappClient.on("message", (msg) => {
 			case 2: {
 				userState.data.city = body;
 				userState.step = 3;
-				return msg.reply("Beleza! Qual serviço você deseja?");
+
+				return msg.reply(
+					"Beleza! Qual serviço você deseja?\n\n 1 - Instalação\n2 - Relatar Problema",
+				);
 			}
 			case 3: {
+				switch (body) {
+					case "1": {
+						return msg.reply("vai instalar nd não viado");
+					}
+					case "2": {
+						return msg.reply(
+							`Ainda bem que o problema é teu Sr. ${userState.data.name} KASKDAKSDKADKASDKASDKSKD`,
+						);
+					}
+				}
 				userState.data.service = body;
 				userState.step = 4;
 				return msg.reply(`Cadastro finalizado Sr. ${userState.data.name}!`);
