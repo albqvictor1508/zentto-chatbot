@@ -5,4 +5,5 @@ export const env = cleanEnv(process.env, {
 	DB_URL: url(),
 	IXC_API_TOKEN: str(),
 	IXC_IP: str(),
+	IXC_BASE_URL: url(),
 });
