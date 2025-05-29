@@ -16,8 +16,7 @@ const userStates = new Map();
 const sayGrace = (date: Date): string => {
 	const hour = date.getHours();
 	if (hour >= 6 || hour < 12) return "Bom dia!";
-	if (hour >= 12 || hour < 18) return "Boa tarde!";
-	return "Boa noite!";
+	return "Boa tarde!";
 };
 
 app.setSerializerCompiler(serializerCompiler);
