@@ -1,4 +1,5 @@
 import { IXCClient } from "ixc-orm";
+import { env } from "../common/env";
 
 class Contract extends IXCClient {
 	constructor() {
@@ -7,4 +8,7 @@ class Contract extends IXCClient {
 	}
 }
 
-export const ixcClient = { contract: new Contract() };
+export const ixcClient = {
+	contract: new Contract(),
+	authToken: `Basic ${Buffer.from(env.IXC_API_TOKEN).toString("base64")}`,
+};

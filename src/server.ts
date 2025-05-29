@@ -64,6 +64,8 @@ Aqui estão algumas opções para facilitar seu atendimento:
 	switch (body) {
 		case "1": {
 			userState.step++;
+			const contracts = ixcClient.contract.get();
+			console.log(chalk.red(`ALL CONTRACTS: ${contracts}`));
 			return msg.reply("teste");
 		}
 		case "2": {
