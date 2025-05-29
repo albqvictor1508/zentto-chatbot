@@ -10,5 +10,5 @@ class Contract extends IXCClient {
 
 export const ixcClient = {
 	contract: new Contract(),
-	authToken: `Basic ${Buffer.from(env.IXC_API_TOKEN).toString("base64")}`,
+	authToken: `Basic ${Buffer.from(env.IXC_HOST).toString("base64")}`,
 };
