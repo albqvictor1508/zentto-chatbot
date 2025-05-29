@@ -59,11 +59,11 @@ Aqui estão algumas opções para facilitar seu atendimento:
 
 	const userState = userStates.get(chatId);
 	if (!userState) return;
-	if (userState.step > 1) return;
+	if (userState.step > 2) return;
 	switch (body) {
 		case "1": {
 			userState.step++;
-			return msg.reply("essa msr ta pegando não");
+			return msg.reply("teste");
 		}
 		case "2": {
 			userState.step++;
@@ -71,11 +71,11 @@ Aqui estão algumas opções para facilitar seu atendimento:
 		}
 		case "3": {
 			userState.step++;
-			return msg.reply("Suporte de cu é rola");
+			return msg.reply("Suporte");
 		}
 		case "4": {
 			userState.step++;
-			return msg.reply("Me chamo Jalim Rabei e serei seu atendente!");
+			return msg.reply("testando");
 		}
 		default: {
 			//todo: colocar o chatgpt pra ler essa porra e analisar se alguma funcionalidade do chat resolve esse problema dele, senão, manda pro atendente
