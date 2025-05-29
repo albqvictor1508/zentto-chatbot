@@ -44,21 +44,42 @@ whatsappClient.on("message", async (msg) => {
 	if (body === "!care") {
 		userStates.set(chatId, { step: 1, data: {} });
 		msg.reply(`${sayGrace(new Date())} tudo certo por aí? 👋 Sou o Zentto, seu assistente virtual! Vamos resolver o que você precisa rapidinho. Como posso ajudar?
-		\n\n
-		Aqui estão algumas opções para facilitar seu atendimento:
-		1️⃣ Verificar conexão de internet
-		2️⃣ Segunda via do boleto
-		3️⃣ Suporte técnico
-		4️⃣ Falar com um atendente
-		🔁 Digite o número da opção desejada ou envie uma mensagem com sua dúvida.
+
+Aqui estão algumas opções para facilitar seu atendimento:
+
+1️⃣ Verificar conexão de internet
+2️⃣ Segunda via do boleto
+3️⃣ Suporte técnico
+
+
+🔁 Digite o número da opção desejada ou envie uma mensagem com sua dúvida.
 		`);
+		// 4️⃣ Falar com um atendente
 	}
 
 	const userState = userStates.get(chatId);
 	if (!userState) return;
-
+	if (userState.step > 1) return;
 	switch (body) {
 		case "1": {
+			userState.step++;
+			return msg.reply("essa msr ta pegando não");
+		}
+		case "2": {
+			userState.step++;
+			return msg.reply("R$ 0,01");
+		}
+		case "3": {
+			userState.step++;
+			return msg.reply("Suporte de cu é rola");
+		}
+		case "4": {
+			userState.step++;
+			return msg.reply("Me chamo Jalim Rabei e serei seu atendente!");
+		}
+		default: {
+			//todo: colocar o chatgpt pra ler essa porra e analisar se alguma funcionalidade do chat resolve esse problema dele, senão, manda pro atendente
+			return msg.reply("tomar no cu seu fudido");
 		}
 	}
 });
