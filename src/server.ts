@@ -2,6 +2,7 @@ import { fastify } from "fastify";
 import { Client, LocalAuth } from "whatsapp-web.js";
 import chalk from "chalk";
 import { db } from "./db/client";
+import { ixcClient } from "./db/ixc";
 import {
 	serializerCompiler,
 	validatorCompiler,
@@ -49,11 +50,10 @@ Aqui estão algumas opções para facilitar seu atendimento:
 1️⃣ Verificar conexão de internet
 2️⃣ Segunda via do boleto
 3️⃣ Suporte técnico
-
+4️⃣ Falar com um atendente
 
 🔁 Digite o número da opção desejada ou envie uma mensagem com sua dúvida.
 		`);
-		// 4️⃣ Falar com um atendente
 	}
 
 	const userState = userStates.get(chatId);
