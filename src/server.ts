@@ -1,5 +1,5 @@
 import { fastify } from "fastify";
-import { Client } from "whatsapp-web.js";
+import { Client, LocalAuth } from "whatsapp-web.js";
 import chalk from "chalk";
 import { db } from "./db/client";
 import {
@@ -23,7 +23,7 @@ const sayGrace = (date: Date): string => {
 app.setSerializerCompiler(serializerCompiler);
 app.setValidatorCompiler(validatorCompiler);
 
-const whatsappClient = new Client({});
+const whatsappClient = new Client({ authStrategy: new LocalAuth() });
 
 whatsappClient.on("qr", (qr) => {
 	console.log("QR CODE RECEIVED", qr);
@@ -43,7 +43,7 @@ whatsappClient.on("message", async (msg) => {
 
 	if (body === "!care") {
 		userStates.set(chatId, { step: 1, data: {} });
-		msg.reply(`${sayGrace(new Date())} tudo certo por aí? 👋 Sou o Zentto, seu assistente virtual! Vamos resolver o que você precisa rapidinho. Como posso ajudar?
+		return msg.reply(`${sayGrace(new Date())} tudo certo por aí? 👋 Sou o Zentto, seu assistente virtual! Vamos resolver o que você precisa rapidinho. Como posso ajudar?
 
 Aqui estão algumas opções para facilitar seu atendimento:
 
@@ -59,7 +59,9 @@ Aqui estão algumas opções para facilitar seu atendimento:
 
 	const userState = userStates.get(chatId);
 	if (!userState) return;
-	if (userState.step > 2) return;
+	if (userState.step > 1) {
+		return;
+	}
 	switch (body) {
 		case "1": {
 			userState.step++;
