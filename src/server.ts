@@ -1,8 +1,7 @@
 import { fastify } from "fastify";
 import { Client, LocalAuth } from "whatsapp-web.js";
 import chalk from "chalk";
-import { db } from "./db/client";
-import { ixcClient } from "./db/ixc";
+import axios from "./db/axios";
 import {
 	serializerCompiler,
 	validatorCompiler,
@@ -10,7 +9,6 @@ import {
 } from "fastify-type-provider-zod";
 import qrcode from "qrcode-terminal";
 import { env } from "./common/env";
-import axios from "axios";
 
 const app = fastify().withTypeProvider<ZodTypeProvider>();
 const userStates = new Map();
@@ -64,8 +62,23 @@ Aqui estão algumas opções para facilitar seu atendimento:
 	switch (body) {
 		case "1": {
 			userState.step++;
-			const contracts = ixcClient.contract.get();
-			console.log(chalk.red(`ALL CONTRACTS: ${contracts}`));
+			const query = await axios.get("/cliente", {
+				data: {
+					qtype: "cnpj_cpf",
+					query: "115.895.877-31",
+					oper: "=",
+					page: "1",
+					rp: "20",
+					sortname: "cliente.id",
+					sortorder: "desc",
+				},
+			});
+			console.log(query);
+			console.log(
+				chalk.red(
+					`ALL CONTRACTS: DATA: ${query.data} CODE:${query.status} ${query.statusText}`,
+				),
+			);
 			return msg.reply("teste");
 		}
 		case "2": {
