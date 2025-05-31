@@ -93,7 +93,7 @@ Aqui estão algumas opções para facilitar seu atendimento:
 		}
 		default: {
 			//todo: colocar o chatgpt pra ler essa porra e analisar se alguma funcionalidade do chat resolve esse problema dele, senão, manda pro atendente
-			return msg.reply("sai dai seu canalha");
+			return msg.reply("mensagem automática do bot ");
 		}
 	}
 });
