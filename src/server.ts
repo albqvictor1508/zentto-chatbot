@@ -91,7 +91,7 @@ Aqui estão algumas opções para facilitar seu atendimento:
 		}
 		case "4": {
 			userState.step++;
-			return msg.reply("testando");
+			return msg.reply("testando o mega chatbot");
 		}
 		default: {
 			//todo: colocar o chatgpt pra ler essa porra e analisar se alguma funcionalidade do chat resolve esse problema dele, senão, manda pro atendente
