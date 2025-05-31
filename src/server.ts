@@ -61,22 +61,29 @@ Aqui estão algumas opções para facilitar seu atendimento:
 	switch (body) {
 		case "1": {
 			userState.step++;
-			const query = await axios.get("/cliente", {
-				data: {
-					qtype: "cnpj_cpf",
-					query: "115.895.877-31",
-					oper: "=",
-					page: "1",
-					rp: "20",
-					sortname: "cliente.id",
-					sortorder: "desc",
-				},
-			});
-			console.log(
-				chalk.red(
-					`ALL CONTRACTS: DATA: ${query.data} CODE:${query.status} ${query.statusText}`,
-				),
-			);
+			try {
+				const query = await axios.get("/", {
+					data: {
+						qtype: "cnpj_cpf",
+						query: "115.895.877-31",
+						oper: "=",
+						page: "1",
+						rp: "20",
+						sortname: "cliente.id",
+						sortorder: "desc",
+					},
+				});
+				console.log(query.data);
+				console.log(
+					chalk.red(
+						`ALL CONTRACTS: DATA: ${query.data} CODE:${query.status} ${query.statusText}`,
+					),
+				);
+			} catch (error) {
+				console.error(chalk.bgWhite(`ERROR MESSAGE: ${error}`));
+				throw error;
+			}
+
 			return msg.reply("teste numero 1");
 		}
 		case "2": {

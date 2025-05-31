@@ -7,15 +7,14 @@ const httpsAgent = new https.Agent({
 	rejectUnauthorized: false,
 });
 
-const authToken = Buffer.from(env.IXC_TOKEN).toString("base64");
-console.log(chalk.bgCyanBright(authToken));
+console.log(chalk.bgCyanBright(env.IXC_TOKEN));
 
 const instance = axios.create({
 	baseURL: env.IXC_HOST,
 	httpsAgent,
 	timeout: 2000,
 	headers: {
-		Authorization: `Basic ${authToken}`,
+		Authorization: `Basic ${env.IXC_TOKEN}`,
 	},
 });
 
