@@ -77,7 +77,7 @@ Aqui estão algumas opções para facilitar seu atendimento:
 					`ALL CONTRACTS: DATA: ${query.data} CODE:${query.status} ${query.statusText}`,
 				),
 			);
-			return msg.reply("teste");
+			return msg.reply("teste numero 1");
 		}
 		case "2": {
 			userState.step++;
