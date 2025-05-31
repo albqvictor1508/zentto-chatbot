@@ -87,7 +87,7 @@ Aqui estão algumas opções para facilitar seu atendimento:
 		}
 		case "3": {
 			userState.step++;
-			return msg.reply("Suporte");
+			return msg.reply("Suporte técnico agility");
 		}
 		case "4": {
 			userState.step++;
