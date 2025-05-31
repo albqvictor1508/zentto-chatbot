@@ -28,7 +28,7 @@ whatsappClient.on("qr", (qr) => {
 });
 
 whatsappClient.on("ready", () => {
-	console.log("Client is ready!");
+	console.log("Client is connected!");
 });
 
 whatsappClient.on("message", async (msg) => {
