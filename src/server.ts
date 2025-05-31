@@ -73,7 +73,6 @@ Aqui estão algumas opções para facilitar seu atendimento:
 					sortorder: "desc",
 				},
 			});
-			console.log(query);
 			console.log(
 				chalk.red(
 					`ALL CONTRACTS: DATA: ${query.data} CODE:${query.status} ${query.statusText}`,
