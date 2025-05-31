@@ -10,7 +10,6 @@ const httpsAgent = new https.Agent({
 console.log(chalk.bgCyanBright(env.IXC_TOKEN));
 
 const instance = axios.create({
-	baseURL: env.IXC_HOST,
 	httpsAgent,
 	timeout: 10000,
 	headers: {
@@ -29,12 +28,19 @@ instance.interceptors.request.use((request) => {
 instance.interceptors.response.use(
 	(response) => {
 		console.log(
-			chalk.blue(`IXC RESPONSE: ${response.status}, ${response.statusText}`),
+			chalk.blue(
+				`IXC RESPONSE: ${response.status}, ${response.statusText} ${JSON.stringify(response.data)}`,
+			),
 		);
-
 		return response;
 	},
-	(error) => {},
+	(error) => {
+		console.log(
+			chalk.red(
+				`IXC REQUEST ERROR: ${error.response?.status} ${error.response?.data}, `,
+			),
+		);
+	},
 );
 
 export default instance;

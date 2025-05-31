@@ -8,6 +8,7 @@ import {
 	type ZodTypeProvider,
 } from "fastify-type-provider-zod";
 import qrcode from "qrcode-terminal";
+import { env } from "./common/env";
 
 const app = fastify().withTypeProvider<ZodTypeProvider>();
 const userStates = new Map();
@@ -62,7 +63,7 @@ Aqui estão algumas opções para facilitar seu atendimento:
 		case "1": {
 			userState.step++;
 			try {
-				const query = await axios.get("/", {
+				const query = await axios.get(`${env.IXC_HOST}/cliente`, {
 					data: {
 						qtype: "cnpj_cpf",
 						query: "115.895.877-31",
@@ -73,12 +74,6 @@ Aqui estão algumas opções para facilitar seu atendimento:
 						sortorder: "desc",
 					},
 				});
-				console.log(query.data);
-				console.log(
-					chalk.red(
-						`ALL CONTRACTS: DATA: ${query.data} CODE:${query.status} ${query.statusText}`,
-					),
-				);
 			} catch (error) {
 				console.error(chalk.bgWhite(`ERROR MESSAGE: ${error}`));
 				throw error;
