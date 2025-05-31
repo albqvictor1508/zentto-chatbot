@@ -26,4 +26,15 @@ instance.interceptors.request.use((request) => {
 	return request;
 });
 
+instance.interceptors.response.use(
+	(response) => {
+		console.log(
+			chalk.blue(`IXC RESPONSE: ${response.status}, ${response.statusText}`),
+		);
+
+		return response;
+	},
+	(error) => {},
+);
+
 export default instance;
