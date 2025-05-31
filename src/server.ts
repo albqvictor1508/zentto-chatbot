@@ -8,7 +8,6 @@ import {
 	type ZodTypeProvider,
 } from "fastify-type-provider-zod";
 import qrcode from "qrcode-terminal";
-import { env } from "./common/env";
 
 const app = fastify().withTypeProvider<ZodTypeProvider>();
 const userStates = new Map();
