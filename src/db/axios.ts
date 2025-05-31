@@ -12,10 +12,18 @@ console.log(chalk.bgCyanBright(env.IXC_TOKEN));
 const instance = axios.create({
 	baseURL: env.IXC_HOST,
 	httpsAgent,
-	timeout: 2000,
+	timeout: 10000,
 	headers: {
+		"Content-Type": "application/json",
 		Authorization: `Basic ${env.IXC_TOKEN}`,
 	},
+});
+
+instance.interceptors.request.use((request) => {
+	console.log(
+		chalk.blue(`IXC REQUEST: ${request.method?.toUpperCase()} ${request.url}`),
+	);
+	return request;
 });
 
 export default instance;
