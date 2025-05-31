@@ -83,7 +83,7 @@ Aqui estão algumas opções para facilitar seu atendimento:
 		}
 		case "2": {
 			userState.step++;
-			return msg.reply("R$ 0,01");
+			return msg.reply("aqui está sua segunda via do boleto");
 		}
 		case "3": {
 			userState.step++;
