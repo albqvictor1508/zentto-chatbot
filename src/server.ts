@@ -28,10 +28,31 @@ whatsappClient.on("qr", (qr) => {
 	qrcode.generate(qr, { small: true });
 });
 
-whatsappClient.on("ready", () => {
+whatsappClient.on("ready", async () => {
 	console.log("Client is connected!");
+	const IXC_TOKEN = Buffer.from(`${env.IXC_USER}:${env.IXC_PASSWORD}`).toString(
+		"base64",
+	);
+	try {
+		const query = await axios.request({
+			method: "GET",
+			url: "/cliente",
+			data: {
+				qtype: "cliente.id",
+				query: "1",
+				oper: ">=",
+				page: "1",
+				rp: "19",
+				sortname: "cliente.id",
+				sortorder: "desc",
+			},
+		});
+		console.log(query);
+	} catch (error) {
+		console.error(chalk.bgWhite(`ERROR MESSAGE: ${error}`));
+		throw error;
+	}
 });
-
 whatsappClient.on("message", async (msg) => {
 	const chatId = msg.from;
 	const body = msg.body.trim();
@@ -62,22 +83,11 @@ Aqui estão algumas opções para facilitar seu atendimento:
 	switch (body) {
 		case "1": {
 			userState.step++;
-			try {
-				const query = await axios.get(`${env.IXC_HOST}/cliente`, {
-					data: {
-						qtype: "cnpj_cpf",
-						query: "115.895.877-31",
-						oper: "=",
-						page: "1",
-						rp: "20",
-						sortname: "cliente.id",
-						sortorder: "desc",
-					},
-				});
-			} catch (error) {
-				console.error(chalk.bgWhite(`ERROR MESSAGE: ${error}`));
-				throw error;
-			}
+			// try {
+			// } catch (error) {
+			// 	console.error(chalk.bgWhite(`ERROR MESSAGE: ${error}`));
+			// 	throw error;
+			// }
 
 			return msg.reply("teste numero 1");
 		}

@@ -7,14 +7,18 @@ const httpsAgent = new https.Agent({
 	rejectUnauthorized: false,
 });
 
-console.log(chalk.bgCyanBright(env.IXC_TOKEN));
+const IXC_TOKEN = Buffer.from(`${env.IXC_USER}:${env.IXC_PASSWORD}`).toString(
+	"base64",
+);
 
 const instance = axios.create({
+	baseURL: env.IXC_HOST,
 	httpsAgent,
 	timeout: 10000,
 	headers: {
+		ixcsoft: "listar",
+		Authorization: `Basic ${IXC_TOKEN}`,
 		"Content-Type": "application/json",
-		Authorization: `Basic ${env.IXC_TOKEN}`,
 	},
 });
 
