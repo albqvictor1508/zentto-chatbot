@@ -61,14 +61,7 @@ whatsappClient.on("message", async (msg) => {
 		userStates.set(chatId, { step: 1, data: {} });
 		return msg.reply(`${sayGrace(new Date())} tudo certo por aí? 👋 Sou o Zentto, seu assistente virtual! Vamos resolver o que você precisa rapidinho. Como posso ajudar?
 
-Aqui estão algumas opções para facilitar seu atendimento:
-
-1️⃣ Verificar conexão de internet
-2️⃣ Segunda via do boleto
-3️⃣ Suporte técnico
-4️⃣ Falar com um atendente
-
-🔁 Digite o número da opção desejada ou envie uma mensagem com sua dúvida.
+Antes de começarmos, digite o CPF no qual está ligada ao plano de internet, e se ainda não é um cliente, digite 1
 		`);
 	}
 
@@ -79,24 +72,32 @@ Aqui estão algumas opções para facilitar seu atendimento:
 	}
 	switch (body) {
 		case "1": {
-			userState.step++;
-			return msg.reply("teste numero 1");
-		}
-		case "2": {
-			userState.step++;
-			return msg.reply("aqui está sua segunda via do boleto");
-		}
-		case "3": {
-			userState.step++;
-			return msg.reply("Suporte técnico agility");
-		}
-		case "4": {
-			userState.step++;
-			return msg.reply("falando com o atendente agility");
+			return msg.reply(`Quer fazer plano com nois paizão
+R$ 89,90 por 2KB de internet!
+				`);
 		}
 		default: {
-			//todo: colocar o chatgpt pra ler essa porra e analisar se alguma funcionalidade do chat resolve esse problema dele, senão, manda pro atendente
-			return msg.reply("mensagem automática do bot ");
+			userState.step++;
+			const query = await axios.request({
+				method: "get",
+				url: "/cliente",
+				data: {
+					qtype: "cnpj_cpf",
+					query: "13606308485",
+					oper: ">",
+					page: "1",
+					rp: 20,
+					sortname: "cliente.id",
+					sortorder: "desc",
+				},
+			});
+			console.log(query);
+			//exemplo
+			const userExists = query.data.filter((u) => u.cpf) || "";
+			if (!userExists) {
+				return msg.reply("");
+			}
+			return "";
 		}
 	}
 });
