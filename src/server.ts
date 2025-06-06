@@ -8,7 +8,6 @@ import {
 	type ZodTypeProvider,
 } from "fastify-type-provider-zod";
 import qrcode from "qrcode-terminal";
-import { env } from "./common/env";
 
 const app = fastify().withTypeProvider<ZodTypeProvider>();
 const userStates = new Map();
@@ -77,27 +76,32 @@ R$ 89,90 por 2KB de internet!
 				`);
 		}
 		default: {
-			userState.step++;
-			const query = await axios.request({
-				method: "get",
-				url: "/cliente",
-				data: {
-					qtype: "cnpj_cpf",
-					query: "13606308485",
-					oper: ">",
-					page: "1",
-					rp: 20,
-					sortname: "cliente.id",
-					sortorder: "desc",
-				},
-			});
-			console.log(query);
-			//exemplo
-			const userExists = query.data.filter((u) => u.cpf) || "";
-			if (!userExists) {
-				return msg.reply("");
+			try {
+				userState.step++;
+				const query = await axios.request({
+					method: "get",
+					url: "/cliente",
+					data: {
+						qtype: "cnpj_cpf",
+						query: "13606308485",
+						oper: ">",
+						page: "1",
+						rp: 20,
+						sortname: "cliente.id",
+						sortorder: "desc",
+					},
+				});
+				console.log(query);
+				//exemplo
+				const userExists = query.data.filter((u) => u.cpf) || "";
+				if (!userExists) {
+					return msg.reply("");
+				}
+				return "";
+			} catch (error) {
+				console.error(error);
+				throw error;
 			}
-			return "";
 		}
 	}
 });
