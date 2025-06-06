@@ -30,9 +30,6 @@ whatsappClient.on("qr", (qr) => {
 
 whatsappClient.on("ready", async () => {
 	console.log("Client is connected!");
-	const IXC_TOKEN = Buffer.from(`${env.IXC_USER}:${env.IXC_PASSWORD}`).toString(
-		"base64",
-	);
 	try {
 		const query = await axios.request({
 			method: "GET",
@@ -83,12 +80,6 @@ Aqui estão algumas opções para facilitar seu atendimento:
 	switch (body) {
 		case "1": {
 			userState.step++;
-			// try {
-			// } catch (error) {
-			// 	console.error(chalk.bgWhite(`ERROR MESSAGE: ${error}`));
-			// 	throw error;
-			// }
-
 			return msg.reply("teste numero 1");
 		}
 		case "2": {
