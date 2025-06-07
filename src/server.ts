@@ -114,9 +114,11 @@ Digite o número da opção desejada.
 				return msg.reply(`
 				BLOCO DE ANALISAR STATUS FINANCEIRO!
 
-				1 - Segunda via do boleto.
+				1 - Segunda via do boleto. 
 				2 - Confirmar pagamento.
 					`);
+				// 1: Se tiver um só boleto, retorna esse boleto em PDF, se tiver mais de um, lista os boleto e pergunta qual ele quer pagar
+				// 2: Se tiver um só boleto, confirma de cara se foi pago, senão, lista os boletos e pergunta qual ele pagou
 			}
 			if (body === "2") {
 				return msg.reply("Bloco de ver o status da internet");
