@@ -49,12 +49,12 @@ whatsappClient.on("message", async (msg) => {
 	}
 
 	if (body === "!ping") {
-		msg.reply("pong");
+		return msg.reply("pong");
 	}
 
 	if (body === "!care") {
 		userStates.set(chatId, { step: 1, data: {} });
-		return msg.reply(`${sayGrace(new Date())} 👋, Sou o Zentto, seu assistente virtual! Vamos resolver o que você precisa rapidinho. Como posso ajudar?
+		return msg.reply(`${sayGrace(new Date())} 👋, Sou o *Zentto*, seu assistente virtual! Vamos resolver o que você precisa rapidinho. Como posso ajudar?
 
 Antes de começarmos, digite o CPF no qual está ligada ao plano de internet, e se ainda não é um cliente, digite 1
 		`);
@@ -66,37 +66,40 @@ Antes de começarmos, digite o CPF no qual está ligada ao plano de internet, e 
 	switch (userState.step) {
 		case 1: {
 			if (body === "1") {
-				return msg.reply(`Quer fazer plano com nois paizão
-				R$ 89,90 por 2KB de internet!
+				userState.step++;
+				return msg.reply(`
+Quer fazer plano com nois paizão, R$ 89,90 por 2KB de internet!
 							`);
 			}
 			const cpfRegex = /^\d{11}$/;
-			const cpfValidated = body.replace("/D/g", "");
-			if (!cpfRegex.test(cpfValidated))
+			if (!cpfRegex.test(body))
 				return msg.reply(`
-				CPF inválido, tente novamente ou digite *1* para realizar um novo cadastro!
-				
+CPF inválido, tente novamente ou digite *1* para realizar um novo cadastro!
 				`);
-			const query = await axios.request({
+			const cpfValidated = ""; //tenho que formatar o cpf pq o IXC salva ele formatado
+			const { data } = await axios.request({
 				method: "get",
 				url: "/cliente",
 				data: {
 					qtype: "cnpj_cpf",
-					query: cpfValidated,
-					oper: ">",
+					query: "",
+					oper: "=",
 					page: "1",
 					rp: 5,
 					sortname: "cliente.id",
 					sortorder: "desc",
 				},
 			});
-			console.log(query);
+			console.log(typeof data);
+			console.log("CPF VALIDATED: %s", cpfValidated);
 			//exemplo
-			const userExists = query.data.filter((u) => u.cpf) || "";
-			if (!userExists)
-				return msg.reply(`
-				Não existe nenhum cliente cadastrado com esse CPF, Envie um CPF novamente ou digite 1 para realizar cadastro 
-			`);
+			// 			const userExists = data.registros.filter(
+			// 				(u) => u.cnpj_cpf === cpfValidated,
+			// 			);
+			// 			if (!userExists)
+			// 				return msg.reply(`
+			// Não existe nenhum cliente cadastrado com esse CPF, Envie um CPF novamente ou digite 1 para realizar cadastro
+			// 			`);
 			userState.step++;
 			userState.data.cpf = cpfValidated;
 			return msg.reply(`
@@ -129,11 +132,16 @@ Digite o número da opção desejada.
 				//simples, só preciso saber como posso fazer essa query pra api do ixc
 				return msg.reply("Bloco de ver o status da internet");
 			}
+
 			userState.block = Block.THREE;
-			//era legal um sistema de push notification para o atendente
-			return msg.reply("Bloco de falar com o atendente");
+			userState.step++;
+			if (body === "3") {
+				return msg.reply("Bloco de falar com o atendente");
+			}
+			return msg.reply("É nois cara, vou te passar pro atendimento");
 		}
 		case 3: {
+			userState.step++;
 			if (userState.block === Block.ONE) {
 				if (body === "1") {
 					return msg.reply("Lógica de segunda via do boleto");
