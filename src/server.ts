@@ -124,12 +124,33 @@ Digite o número da opção desejada.
 				//e nois dois, ter um tratamento caso não haja nenhum boleto em aberto
 			}
 			if (body === "2") {
+				userState.step++;
 				userState.block = Block.TWO;
 				//simples, só preciso saber como posso fazer essa query pra api do ixc
 				return msg.reply("Bloco de ver o status da internet");
 			}
+			userState.block = Block.THREE;
 			//era legal um sistema de push notification para o atendente
 			return msg.reply("Bloco de falar com o atendente");
+		}
+		case 3: {
+			if (userState.block === Block.ONE) {
+				if (body === "1") {
+					return msg.reply("Lógica de segunda via do boleto");
+				}
+				if (body === "2") {
+					return msg.reply("Lógica de confirmar pagamento");
+				}
+			}
+
+			if (userState.block === Block.TWO) {
+				return msg.reply("Lógica de verificar status da internet");
+			}
+
+			if (userState.block === Block.THREE) {
+				return msg.reply("Lógica de chamar atendente");
+			}
+			return "";
 		}
 	}
 });
