@@ -119,6 +119,7 @@ Digite o número da opção desejada.
 					`);
 				// 1: Se tiver um só boleto, retorna esse boleto em PDF, se tiver mais de um, lista os boleto e pergunta qual ele quer pagar
 				// 2: Se tiver um só boleto, confirma de cara se foi pago, senão, lista os boletos e pergunta qual ele pagou
+				//e nois dois, ter um tratamento caso não haja nenhum boleto em aberto
 			}
 			if (body === "2") {
 				return msg.reply("Bloco de ver o status da internet");
