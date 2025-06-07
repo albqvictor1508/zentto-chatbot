@@ -69,7 +69,6 @@ R$ 89,90 por 2KB de internet!
 				}
 				default: {
 					try {
-						userState.step++;
 						const query = await axios.request({
 							method: "get",
 							url: "/cliente",
@@ -89,10 +88,12 @@ R$ 89,90 por 2KB de internet!
 						if (!userExists)
 							return msg.reply(
 								`Não existe nenhum cliente cadastrado com esse CPF
-								1 - Realizar cadastro
-								2- Tentar novamente
+
+								Envie um CPF novamente ou digite 1 para realizar cadastro
 								`,
 							);
+						userState.step++;
+
 						return "";
 					} catch (error) {
 						console.error(error);
