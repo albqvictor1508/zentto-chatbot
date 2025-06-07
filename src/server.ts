@@ -8,6 +8,7 @@ import {
 	type ZodTypeProvider,
 } from "fastify-type-provider-zod";
 import qrcode from "qrcode-terminal";
+import { z } from "zod";
 
 const app = fastify().withTypeProvider<ZodTypeProvider>();
 const userStates = new Map();
@@ -43,6 +44,10 @@ whatsappClient.on("ready", async () => {
 whatsappClient.on("message", async (msg) => {
 	const chatId = msg.from;
 	const body = msg.body.trim();
+	if (msg.from.includes("@g.us") || msg.from === "status@broadcast") {
+		return;
+	}
+
 	if (body === "!ping") {
 		msg.reply("pong");
 	}
