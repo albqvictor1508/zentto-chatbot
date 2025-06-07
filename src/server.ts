@@ -99,7 +99,15 @@ Antes de começarmos, digite o CPF no qual está ligada ao plano de internet, e 
 			`);
 			userState.step++;
 			userState.data.cpf = cpfValidated;
-			return msg.reply("achei o cliente aqui");
+			return msg.reply(`
+Olá, [NOME_DO_CLIENTE]! Como posso ajudar?
+
+1 - Realizar pagamento
+2 - Status da minha internet
+3 - Falar com atendente
+
+Digite o número da opção desejada.
+`);
 		}
 		case 2: {
 		}
