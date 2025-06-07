@@ -8,6 +8,7 @@ import {
 	type ZodTypeProvider,
 } from "fastify-type-provider-zod";
 import qrcode from "qrcode-terminal";
+import { Block } from "./types/chat";
 
 const app = fastify().withTypeProvider<ZodTypeProvider>();
 const userStates = new Map();
@@ -110,6 +111,8 @@ Digite o número da opção desejada.
 		}
 		case 2: {
 			if (body === "1") {
+				userState.block = Block.ONE;
+				userState.step++;
 				return msg.reply(`
 				BLOCO DE ANALISAR STATUS FINANCEIRO!
 
@@ -121,6 +124,7 @@ Digite o número da opção desejada.
 				//e nois dois, ter um tratamento caso não haja nenhum boleto em aberto
 			}
 			if (body === "2") {
+				userState.block = Block.TWO;
 				//simples, só preciso saber como posso fazer essa query pra api do ixc
 				return msg.reply("Bloco de ver o status da internet");
 			}
