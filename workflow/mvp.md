@@ -47,15 +47,19 @@ Digite o número da opção desejada.
 
 ### Fluxo Simples:
 1. Cliente escolhe opção "1"
+
 2. Bot consulta faturas em aberto na API IXC
+
 3. **Se tem apenas 1 fatura:**
    - Gera e envia PDF automaticamente
    - Mostra dados: valor, vencimento
    - Oferece copiar código de barras
+
 4. **Se tem múltiplas faturas:**
    - Lista as faturas com números
    - Cliente escolhe qual quer
    - Gera e envia PDF da escolhida
+   
 5. **Se não tem faturas em aberto:**
    - Informa que não há pendências
    - Oferece outras opções do menu

@@ -102,14 +102,26 @@ Antes de começarmos, digite o CPF no qual está ligada ao plano de internet, e 
 			return msg.reply(`
 Olá, [NOME_DO_CLIENTE]! Como posso ajudar?
 
-1 - Realizar pagamento
-2 - Status da minha internet
-3 - Falar com atendente
+1 - Analisar status financeiro.
+2 - Status da minha internet.
+3 - Falar com atendente.
 
 Digite o número da opção desejada.
 `);
 		}
 		case 2: {
+			if (body === "1") {
+				return msg.reply(`
+				BLOCO DE ANALISAR STATUS FINANCEIRO!
+
+				1 - Segunda via do boleto.
+				2 - Confirmar pagamento.
+					`);
+			}
+			if (body === "2") {
+				return msg.reply("Bloco de ver o status da internet");
+			}
+			return msg.reply("Bloco de falar com o atendente");
 		}
 	}
 });
