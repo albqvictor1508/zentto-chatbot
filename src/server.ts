@@ -23,29 +23,20 @@ app.setValidatorCompiler(validatorCompiler);
 const whatsappClient = new Client({ authStrategy: new LocalAuth() });
 
 whatsappClient.on("qr", (qr) => {
-	console.log("QR CODE RECEIVED", qr);
+	try {
+		console.log("QR CODE RECEIVED", qr);
+	} catch (error) {
+		console.error(error);
+		throw error;
+	}
 	qrcode.generate(qr, { small: true });
 });
 
 whatsappClient.on("ready", async () => {
-	console.log("Client is connected!");
 	try {
-		const query = await axios.request({
-			method: "GET",
-			url: "/cliente",
-			data: {
-				qtype: "cliente.id",
-				query: "1",
-				oper: ">=",
-				page: "1",
-				rp: "19",
-				sortname: "cliente.id",
-				sortorder: "desc",
-			},
-		});
-		console.log(query);
+		console.log("Client is connected!");
 	} catch (error) {
-		console.error(chalk.bgWhite(`ERROR MESSAGE: ${error}`));
+		console.log(error);
 		throw error;
 	}
 });
@@ -58,7 +49,7 @@ whatsappClient.on("message", async (msg) => {
 
 	if (body === "!care") {
 		userStates.set(chatId, { step: 1, data: {} });
-		return msg.reply(`${sayGrace(new Date())} tudo certo por aí? 👋 Sou o Zentto, seu assistente virtual! Vamos resolver o que você precisa rapidinho. Como posso ajudar?
+		return msg.reply(`${sayGrace(new Date())} 👋, Sou o Zentto, seu assistente virtual! Vamos resolver o que você precisa rapidinho. Como posso ajudar?
 
 Antes de começarmos, digite o CPF no qual está ligada ao plano de internet, e se ainda não é um cliente, digite 1
 		`);
@@ -66,41 +57,58 @@ Antes de começarmos, digite o CPF no qual está ligada ao plano de internet, e 
 
 	const userState = userStates.get(chatId);
 	if (!userState) return;
-	if (userState.step > 1) {
-		return;
-	}
-	switch (body) {
-		case "1": {
-			return msg.reply(`Quer fazer plano com nois paizão
+
+	switch (userState.step) {
+		case 1: {
+			switch (body) {
+				case "1": {
+					userState.step++;
+					return msg.reply(`Quer fazer plano com nois paizão
 R$ 89,90 por 2KB de internet!
 				`);
-		}
-		default: {
-			try {
-				userState.step++;
-				const query = await axios.request({
-					method: "get",
-					url: "/cliente",
-					data: {
-						qtype: "cnpj_cpf",
-						query: "13606308485",
-						oper: ">",
-						page: "1",
-						rp: 20,
-						sortname: "cliente.id",
-						sortorder: "desc",
-					},
-				});
-				console.log(query);
-				//exemplo
-				const userExists = query.data.filter((u) => u.cpf) || "";
-				if (!userExists) {
-					return msg.reply("");
 				}
-				return "";
-			} catch (error) {
-				console.error(error);
-				throw error;
+				default: {
+					try {
+						userState.step++;
+						const query = await axios.request({
+							method: "get",
+							url: "/cliente",
+							data: {
+								qtype: "cnpj_cpf",
+								query: "13606308485",
+								oper: ">",
+								page: "1",
+								rp: 20,
+								sortname: "cliente.id",
+								sortorder: "desc",
+							},
+						});
+						console.log(query);
+						//exemplo
+						const userExists = query.data.filter((u) => u.cpf) || "";
+						if (!userExists)
+							return msg.reply(
+								`Não existe nenhum cliente cadastrado com esse CPF
+								1 - Realizar cadastro
+								2- Tentar novamente
+								`,
+							);
+						return "";
+					} catch (error) {
+						console.error(error);
+						throw error;
+					}
+				}
+			}
+		}
+		case 2: {
+			switch (body) {
+				case "1": {
+					userState.step++;
+					return msg.reply(`
+						Irei de passar para o atendente. tchau
+						`);
+				}
 			}
 		}
 	}
