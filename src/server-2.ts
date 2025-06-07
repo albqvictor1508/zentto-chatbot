@@ -47,7 +47,9 @@ whatsappClient.on("message", async (msg) => {
 	let userState: ChatData | undefined;
 	if (body === "!care") {
 		userState = userStates.get(chatId);
-		return msg.reply;
+		return msg.reply(`
+${sayGrace(new Date())}, Sou o assistente virtual da *Agility Telecom*, Antes de começarmos, peço que digite seu *CPF* para identificarmos você, ou digite *1* se deseja saber mais sobre nosso serviço! 
+			`);
 	}
 
 	if (!userState) return;
@@ -55,6 +57,12 @@ whatsappClient.on("message", async (msg) => {
 		switch (userState.step) {
 			case 1: {
 				if (body === "1") {
+					return msg.reply(`
+A Agility é tarara tarara, fornecemos planos desde *R$ 60,00* ${"à"} *R$ 80,00*, fornecemos serviços nas regiões de parara parara
+
+1 - Realizar cadastro
+2 - ir tomar no cu
+						`);
 				}
 				return "";
 			}
