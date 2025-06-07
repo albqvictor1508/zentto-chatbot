@@ -65,58 +65,53 @@ Antes de começarmos, digite o CPF no qual está ligada ao plano de internet, e 
 
 	switch (userState.step) {
 		case 1: {
-			switch (body) {
-				case "1": {
-					userState.step++;
-					return msg.reply(`Quer fazer plano com nois paizão
-R$ 89,90 por 2KB de internet!
-				`);
-				}
-				default: {
-					try {
-						const query = await axios.request({
-							method: "get",
-							url: "/cliente",
-							data: {
-								qtype: "cnpj_cpf",
-								query: "13606308485",
-								oper: ">",
-								page: "1",
-								rp: 20,
-								sortname: "cliente.id",
-								sortorder: "desc",
-							},
-						});
-						console.log(query);
-						//exemplo
-						const userExists = query.data.filter((u) => u.cpf) || "";
-						if (!userExists)
-							return msg.reply(
-								`Não existe nenhum cliente cadastrado com esse CPF
-
-								Envie um CPF novamente ou digite 1 para realizar cadastro
-								`,
-							);
-						userState.step++;
-
-						return "";
-					} catch (error) {
-						console.error(error);
-						throw error;
-					}
-				}
+			if (body === "1") {
+				return msg.reply(`Quer fazer plano com nois paizão
+				R$ 89,90 por 2KB de internet!
+							`);
 			}
+			const cpfRegex = /^\d{11}$/;
+			const cpfValidated = body.replace("/D/g", "");
+			if (!cpfRegex.test(cpfValidated))
+				return msg.reply(`
+				CPF inválido, tente novamente ou digite *1* para realizar um novo cadastro!
+				
+				`);
+			const query = await axios.request({
+				method: "get",
+				url: "/cliente",
+				data: {
+					qtype: "cnpj_cpf",
+					query: cpfValidated,
+					oper: ">",
+					page: "1",
+					rp: 5,
+					sortname: "cliente.id",
+					sortorder: "desc",
+				},
+			});
+			console.log(query);
+			//exemplo
+			const userExists = query.data.filter((u) => u.cpf) || "";
+			if (!userExists)
+				return msg.reply(`
+				Não existe nenhum cliente cadastrado com esse CPF, Envie um CPF novamente ou digite 1 para realizar cadastro 
+			`);
+			userState.step++;
+			userState.data.cpf = cpfValidated;
+			return msg.reply("achei o cliente aqui");
 		}
 		case 2: {
-			switch (body) {
-				case "1": {
-					userState.step++;
-					return msg.reply(`
-						Irei de passar para o atendente. tchau
-						`);
-				}
-			}
 		}
 	}
 });
+
+whatsappClient.on("disconnected", (reason) => {
+	console.log(chalk.yellow("WhatsApp Client disconnected:"), reason);
+});
+
+whatsappClient.on("auth_failure", (message) => {
+	console.error(chalk.red("Authentication failed:"), message);
+});
+
 whatsappClient.initialize();
