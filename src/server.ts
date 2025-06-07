@@ -122,8 +122,10 @@ Digite o número da opção desejada.
 				//e nois dois, ter um tratamento caso não haja nenhum boleto em aberto
 			}
 			if (body === "2") {
+				//simples, só preciso saber como posso fazer essa query pra api do ixc
 				return msg.reply("Bloco de ver o status da internet");
 			}
+			//era legal um sistema de push notification para o atendente
 			return msg.reply("Bloco de falar com o atendente");
 		}
 	}
