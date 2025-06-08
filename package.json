@@ -5,7 +5,7 @@
 	"main": "src/server.ts",
 	"scripts": {
 		"dev": "tsx --env-file .env --watch src/server.ts",
-		"testapi": "tsx --env-file .env --watch src/test-api.ts"
+		"test": "tsx --env-file .env --watch src/test/index.test.ts"
 	},
 	"keywords": [],
 	"author": "",

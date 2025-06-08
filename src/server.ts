@@ -8,10 +8,13 @@ import {
 	type ZodTypeProvider,
 } from "fastify-type-provider-zod";
 import qrcode from "qrcode-terminal";
-import { Block } from "./types/chat";
+import { Block, type ChatData } from "./types/chat";
 
 const app = fastify().withTypeProvider<ZodTypeProvider>();
-const userStates = new Map();
+const userStates = new Map<string, ChatData>();
+const formatCpf = (cpf) => {
+	return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+};
 const sayGrace = (date: Date): string => {
 	const hour = date.getHours();
 	if (hour >= 6 || hour < 12) return "Bom dia!";
@@ -44,9 +47,7 @@ whatsappClient.on("ready", async () => {
 whatsappClient.on("message", async (msg) => {
 	const chatId = msg.from;
 	const body = msg.body.trim();
-	if (msg.from.includes("@g.us") || msg.from === "status@broadcast") {
-		return;
-	}
+	if (msg.from.includes("@g.us") || msg.from === "status@broadcast") return;
 
 	if (body === "!ping") {
 		return msg.reply("pong");
@@ -76,13 +77,13 @@ Quer fazer plano com nois paizão, R$ 89,90 por 2KB de internet!
 				return msg.reply(`
 CPF inválido, tente novamente ou digite *1* para realizar um novo cadastro!
 				`);
-			const cpfValidated = ""; //tenho que formatar o cpf pq o IXC salva ele formatado
+			const cpfValidated = formatCpf(body);
 			const { data } = await axios.request({
 				method: "get",
 				url: "/cliente",
 				data: {
 					qtype: "cnpj_cpf",
-					query: "",
+					query: cpfValidated,
 					oper: "=",
 					page: "1",
 					rp: 5,
@@ -114,7 +115,7 @@ Digite o número da opção desejada.
 		}
 		case 2: {
 			if (body === "1") {
-				userState.block = Block.ONE;
+				userState.data.block = Block.ONE;
 				userState.step++;
 				return msg.reply(`
 				BLOCO DE ANALISAR STATUS FINANCEIRO!
@@ -128,12 +129,12 @@ Digite o número da opção desejada.
 			}
 			if (body === "2") {
 				userState.step++;
-				userState.block = Block.TWO;
+				userState.data.block = Block.TWO;
 				//simples, só preciso saber como posso fazer essa query pra api do ixc
 				return msg.reply("Bloco de ver o status da internet");
 			}
 
-			userState.block = Block.THREE;
+			userState.data.block = Block.THREE;
 			userState.step++;
 			if (body === "3") {
 				return msg.reply("Bloco de falar com o atendente");
@@ -142,7 +143,7 @@ Digite o número da opção desejada.
 		}
 		case 3: {
 			userState.step++;
-			if (userState.block === Block.ONE) {
+			if (userState.data.block === Block.ONE) {
 				if (body === "1") {
 					return msg.reply("Lógica de segunda via do boleto");
 				}
@@ -151,11 +152,11 @@ Digite o número da opção desejada.
 				}
 			}
 
-			if (userState.block === Block.TWO) {
+			if (userState.data.block === Block.TWO) {
 				return msg.reply("Lógica de verificar status da internet");
 			}
 
-			if (userState.block === Block.THREE) {
+			if (userState.data.block === Block.THREE) {
 				return msg.reply("Lógica de chamar atendente");
 			}
 			return "";
