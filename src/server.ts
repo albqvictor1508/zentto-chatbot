@@ -72,7 +72,7 @@ Antes de começarmos, digite o CPF no qual está ligada ao plano de internet, e 
 Quer fazer plano com nois paizão, R$ 89,90 por 2KB de internet!
 							`);
 			}
-			const cpfRegex = /^\d{11}$/;
+			const cpfRegex = /^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$/;
 			if (!cpfRegex.test(body))
 				return msg.reply(`
 CPF inválido, tente novamente ou digite *1* para realizar um novo cadastro!
@@ -91,17 +91,13 @@ CPF inválido, tente novamente ou digite *1* para realizar um novo cadastro!
 					sortorder: "desc",
 				},
 			});
-			console.log(typeof data);
+			console.log(data.registros ? data.registros.length : "não tem");
 			console.log("CPF VALIDATED: %s", cpfValidated);
 			//exemplo
-			// 			const userExists = data.registros.filter(
-			// 				(u) => u.cnpj_cpf === cpfValidated,
-			// 			);
-			// 			if (!userExists)
-			// 				return msg.reply(`
-			// Não existe nenhum cliente cadastrado com esse CPF, Envie um CPF novamente ou digite 1 para realizar cadastro
-			// 			`);
-			userState.step++;
+			if (!data.registros)
+				return msg.reply(`
+Não existe nenhum cliente cadastrado com esse CPF, Envie um CPF novamente ou digite 1 para realizar cadastro
+			 			`);
 			userState.data.cpf = cpfValidated;
 			return msg.reply(`
 Olá, [NOME_DO_CLIENTE]! Como posso ajudar?
