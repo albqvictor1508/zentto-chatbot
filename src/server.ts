@@ -146,6 +146,17 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
 			userState.step++;
 			if (userState.data.block === Block.ONE) {
 				if (body === "1") {
+					const query = await axios.request({
+						method: "get",
+						url: "/get_boleto",
+						data: {
+							boletos: "",
+							juro: "N",
+							multa: "N",
+							atualiza_boleto: "arquivo",
+							base64: "S",
+						},
+					});
 					return msg.reply("Lógica de segunda via do boleto");
 				}
 				if (body === "2") {
