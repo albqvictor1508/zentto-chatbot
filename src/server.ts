@@ -146,7 +146,7 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
 			userState.step++;
 			if (userState.data.block === Block.ONE) {
 				if (body === "1") {
-					const getBilletList = await axios.request({
+					const { data: getBilletList } = await axios.request({
 						method: "get",
 						url: "/fn_areceber",
 						data: {
@@ -158,8 +158,8 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
 							grid_param: "",
 						},
 					});
-					if (getBilletList.data.registros.length < 1) return;
-					const getBilletArchive = await axios.request({
+					if (getBilletList.registros.length < 1) return;
+					const { data: getBilletArchive } = await axios.request({
 						method: "get",
 						url: "/get_boleto",
 						data: {
@@ -170,6 +170,7 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
 							base64: "S",
 						},
 					});
+					console.log(getBilletArchive);
 					return msg.reply("Lógica de segunda via do boleto");
 				}
 				if (body === "2") {
