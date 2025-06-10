@@ -146,7 +146,20 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
 			userState.step++;
 			if (userState.data.block === Block.ONE) {
 				if (body === "1") {
-					const query = await axios.request({
+					const getBilletList = await axios.request({
+						method: "get",
+						url: "/fn_areceber",
+						data: {
+							qtype: "fn_areceber.id_cliente",
+							query: "19",
+							oper: "=",
+							rp: "200",
+							sortname: "asc",
+							grid_param: "",
+						},
+					});
+					if (getBilletList.data.registros.length < 1) return;
+					const getBilletArchive = await axios.request({
 						method: "get",
 						url: "/get_boleto",
 						data: {
