@@ -100,8 +100,10 @@ Antes de começarmos, digite o CPF no qual está ligada ao plano de internet, e 
 						"Não existe nenhum cliente cadastrado com esse CPF, Envie um CPF novamente ou digite 1 para realizar cadastro",
 					);
 				userState.data.cpf = cpfValidated;
+				userState.data.name = data.registros[0].fantasia;
+				userState.step++;
 				return msg.reply(`
-Olá, [NOME_DO_CLIENTE]! Como posso ajudar?
+Olá, ${userState.data.name} Como posso ajudar?
 
 1 - Analisar status financeiro.
 2 - Status da minha internet.
@@ -145,20 +147,8 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
 		case 3: {
 			userState.step++;
 			if (userState.data.block === Block.ONE) {
+				//TODO: contatar o IXC sobre essas duas rotas,
 				if (body === "1") {
-					const getBilletList = await axios.request({
-						method: "get",
-						url: "/fn_areceber",
-						data: {
-							qtype: "fn_areceber.id_cliente",
-							query: "19",
-							oper: "=",
-							rp: "200",
-							sortname: "asc",
-							grid_param: "",
-						},
-					});
-					if (getBilletList.data.registros.length < 1) return;
 					const getBilletArchive = await axios.request({
 						method: "get",
 						url: "/get_boleto",
@@ -167,9 +157,11 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
 							juro: "N",
 							multa: "N",
 							atualiza_boleto: "arquivo",
-							base64: "S",
+							base64: "N", //alterar pra "S" caso eu queira base64
 						},
 					});
+					if (!getBilletArchive.data)
+						return msg.reply("Você não possui contas a pagar.");
 					return msg.reply("Lógica de segunda via do boleto");
 				}
 				if (body === "2") {
