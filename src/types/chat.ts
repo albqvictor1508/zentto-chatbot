@@ -1,6 +1,18 @@
 export type ChatData = {
 	step: number;
-	data: { name?: string; cpf?: string; phone?: string; block?: Block };
+	data: {
+		name?: string;
+		cpf?: string;
+		phone?: string;
+		block?: Block;
+		id?: string;
+	};
+};
+
+export type DefaultQuery = {
+	page: string;
+	total: string;
+	registros: Array<{}>;
 };
 
 export enum Block {

@@ -20,6 +20,7 @@ const sayGrace = (date: Date): string => {
 	if (hour >= 6 || hour < 12) return "Bom dia!";
 	return "Boa tarde!";
 };
+const actualYear = new Date().getFullYear();
 
 app.setSerializerCompiler(serializerCompiler);
 app.setValidatorCompiler(validatorCompiler);
@@ -39,6 +40,7 @@ whatsappClient.on("qr", (qr) => {
 whatsappClient.on("ready", async () => {
 	try {
 		console.log("Client is connected!");
+		console.log(actualYear);
 	} catch (error) {
 		console.log(error);
 		throw error;
@@ -101,6 +103,7 @@ Antes de começarmos, digite o CPF no qual está ligada ao plano de internet, e 
 					);
 				userState.data.cpf = cpfValidated;
 				userState.data.name = data.registros[0].fantasia;
+				userState.data.id = data.registros[0].id;
 				userState.step++;
 				return msg.reply(`
 Olá, ${userState.data.name} Como posso ajudar?
@@ -139,15 +142,34 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
 
 			userState.data.block = Block.THREE;
 			userState.step++;
-			if (body === "3") {
-				return msg.reply("Bloco de falar com o atendente");
-			}
 			return msg.reply("É nois cara, vou te passar pro atendimento");
 		}
 		case 3: {
 			userState.step++;
 			if (userState.data.block === Block.ONE) {
 				//buscar na documentação a rota de listar boleto q eu perdi'
+				const { data: getBilletData } = await axios.request({
+					method: "get",
+					url: "/fn_areceber",
+					data: {
+						qtype: "fn_areceber.id_cliente",
+						query: userState.data.id,
+						oper: "=",
+						rp: "*",
+						sortname: "fn_areceber.data_vencimento",
+						sortorder: "asc",
+					},
+				});
+				// const actualBillets = getBilletData.data.registros.filter(
+				//(billet) => billet.data_emissao.getYear() === actualYear,
+				//);
+				for (const billet of getBilletData.registros) {
+					console.log(
+						(new Date(billet.data_emissao).getFullYear() === actualYear ||
+							null) ??
+							"não tem não",
+					);
+				}
 				if (body === "1") {
 					const getBilletArchive = await axios.request({
 						method: "get",
