@@ -21,6 +21,7 @@ const sayGrace = (date: Date): string => {
   if (hour >= 6 || hour < 12) return "Bom dia!";
   return "Boa tarde!";
 };
+const actualYear = new Date().getFullYear();
 
 app.setSerializerCompiler(serializerCompiler);
 app.setValidatorCompiler(validatorCompiler);
@@ -40,6 +41,7 @@ whatsappClient.on("qr", (qr) => {
 whatsappClient.on("ready", async () => {
   try {
     console.log("Client is connected!");
+    console.log(actualYear);
   } catch (error) {
     console.log(error);
     throw error;
@@ -101,8 +103,11 @@ Antes de começarmos, digite o CPF no qual está ligada ao plano de internet, e 
             "Não existe nenhum cliente cadastrado com esse CPF, Envie um CPF novamente ou digite 1 para realizar cadastro",
           );
         userState.data.cpf = cpfValidated;
+        userState.data.name = data.registros[0].fantasia;
+        userState.data.id = data.registros[0].id;
+        userState.step++;
         return msg.reply(`
-Olá, [NOME_DO_CLIENTE]! Como posso ajudar?
+Olá, ${userState.data.name} Como posso ajudar ?
 
 1 - Analisar status financeiro.
 2 - Status da minha internet.
@@ -122,7 +127,7 @@ Digite o número da opção desejada.
         return msg.reply(`
 BLOCO DE ANALISAR STATUS FINANCEIRO!
 
-1 - Segunda via do boleto. 
+1 - Segunda via do boleto.
 2 - Confirmar pagamento.
 					`);
         // 1: Se tiver um só boleto, retorna esse boleto em PDF, se tiver mais de um, lista os boleto e pergunta qual ele quer pagar
@@ -135,7 +140,6 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
         //simples, só preciso saber como posso fazer essa query pra api do ixc
         return msg.reply("Bloco de ver o status da internet");
       }
-
       userState.data.block = Block.THREE;
       userState.step++;
       if (body === "3") {
@@ -178,15 +182,9 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
           return msg.reply("Lógica de confirmar pagamento");
         }
       }
-
-      if (userState.data.block === Block.TWO) {
-        return msg.reply("Lógica de verificar status da internet");
-      }
-
-      if (userState.data.block === Block.THREE) {
-        return msg.reply("Lógica de chamar atendente");
-      }
-      return "";
+      userState.data.block = Block.THREE;
+      userState.step++;
+      return msg.reply("É nois cara, vou te passar pro atendimento");
     }
   }
 });
