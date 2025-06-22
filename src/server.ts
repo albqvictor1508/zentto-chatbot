@@ -50,7 +50,7 @@ whatsappClient.on("ready", async () => {
 whatsappClient.on("message", async (msg) => {
   const chatId = msg.from;
   const body = msg.body.trim();
-  if (msg.from.includes("@g.us") || msg.from === "status@broadcast") return;
+  if (msg.from.includes("@g.us") || msg.from === "status@broadcast") return; // pra n responder grupo
 
   if (body === "!ping") {
     return msg.reply("pong");
@@ -97,7 +97,7 @@ Antes de começarmos, digite o CPF no qual está ligada ao plano de internet, e 
         });
         console.log(data.registros ? data.registros.length : "não tem");
         console.log("CPF VALIDATED: %s", cpfValidated);
-        //exemplo
+
         if (!data.registros)
           return msg.reply(
             "Não existe nenhum cliente cadastrado com esse CPF, Envie um CPF novamente ou digite 1 para realizar cadastro",
@@ -107,7 +107,7 @@ Antes de começarmos, digite o CPF no qual está ligada ao plano de internet, e 
         userState.data.id = data.registros[0].id;
         userState.step++;
         return msg.reply(`
-Olá, ${userState.data.name} Como posso ajudar ?
+Olá ${userState.data.name}, Como posso ajudar ?
 
 1 - Analisar status financeiro.
 2 - Status da minha internet.
@@ -163,6 +163,7 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
               grid_param: "",
             },
           });
+
           if (getBilletList.registros.length < 1) return;
           const { data: getBilletArchive } = await axios.request({
             method: "get",
