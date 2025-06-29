@@ -1,33 +1,31 @@
 {
-	"name": "zentto",
-	"version": "1.0.0",
-	"description": "",
-	"main": "src/server.ts",
-	"scripts": {
-		"dev": "tsx --env-file .env --watch src/server.ts",
-		"test": "tsx --env-file .env --watch src/test/index.test.ts"
-	},
-	"keywords": [],
-	"author": "",
-	"license": "ISC",
-	"devDependencies": {
-		"@biomejs/biome": "^1.9.4",
-		"@types/node": "^22.15.21",
-		"chalk": "^5.4.1",
-		"envalid": "^8.0.0",
-		"typescript": "^5.8.3"
-	},
-	"dependencies": {
-		"@types/qrcode-terminal": "^0.12.2",
-		"axios": "^1.9.0",
-		"fastify": "^5.3.3",
-		"fastify-type-provider-zod": "^4.0.2",
-		"ixc-orm": "^1.2.0",
-		"mongodb": "^6.16.0",
-		"puppeteer": "^24.9.0",
-		"qrcode-terminal": "^0.12.0",
-		"tsx": "^4.19.4",
-		"whatsapp-web.js": "^1.28.0",
-		"zod": "^3.25.30"
-	}
+  "name": "zentto",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/server.ts",
+  "scripts": {
+    "dev": "tsx --env-file .env --watch src/server.ts",
+    "test": "tsx --env-file .env --watch src/test/index.test.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/node": "^22.15.21",
+    "chalk": "^5.4.1",
+    "envalid": "^8.0.0",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "whatsapp-web.js": "pedroslopez/whatsapp-web.js",
+    "@types/qrcode-terminal": "^0.12.2",
+    "axios": "^1.9.0",
+    "fastify": "^5.3.3",
+    "fastify-type-provider-zod": "^4.0.2",
+    "mongodb": "^6.16.0",
+    "qrcode-terminal": "^0.12.0",
+    "tsx": "^4.19.4",
+    "zod": "^3.25.30"
+  }
 }

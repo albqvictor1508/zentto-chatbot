@@ -28,13 +28,8 @@ app.setValidatorCompiler(validatorCompiler);
 
 const whatsappClient = new Client({ authStrategy: new LocalAuth() });
 
-whatsappClient.on("qr", (qr) => {
-  try {
-    console.log("QR CODE RECEIVED", qr);
-  } catch (error) {
-    console.error(error);
-    throw error;
-  }
+whatsappClient.on("qr", (qr: string) => {
+  console.log(qr);
   qrcode.generate(qr, { small: true });
 });
 
@@ -55,6 +50,7 @@ whatsappClient.on("message", async (msg) => {
   if (body === "!ping") {
     return msg.reply("pong");
   }
+
 
   if (body === "!care") {
     userStates.set(chatId, { step: 1, data: {} });
@@ -77,6 +73,7 @@ Antes de começarmos, digite o CPF no qual está ligada ao plano de internet, e 
           );
         }
         const cpfRegex = /^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$/;
+
         if (!cpfRegex.test(body))
           return msg.reply(
             "CPF inválido, tente novamente ou digite *1* para realizar um novo cadastro!",
@@ -156,27 +153,27 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
             url: "/fn_areceber",
             data: {
               qtype: "fn_areceber.id_cliente",
-              query: "19",
+              query: userState.data.id,
               oper: "=",
-              rp: "200",
+              rp: "1",
               sortname: "asc",
-              grid_param: "",
+              sortorder: "fn_areceber.data_vencimento",
             },
           });
 
-          if (getBilletList.registros.length < 1) return;
-          const { data: getBilletArchive } = await axios.request({
-            method: "get",
-            url: "/get_boleto",
-            data: {
-              boletos: "",
-              juro: "N",
-              multa: "N",
-              atualiza_boleto: "arquivo",
-              base64: "S",
-            },
-          });
-          console.log(getBilletArchive);
+          console.log(getBilletList);
+          /*          const { data: getBilletArchive } = await axios.request({
+              method: "get",
+              url: "/get_boleto",
+              data: {
+                boletos: "",
+                juro: "N",
+                multa: "N",
+                atualiza_boleto: "arquivo",
+                base64: "S",
+              },
+            });
+  */
           return msg.reply("Lógica de segunda via do boleto");
         }
         if (body === "2") {
