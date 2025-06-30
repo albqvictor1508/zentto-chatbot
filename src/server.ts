@@ -161,21 +161,22 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
           });
 
           console.log(getBilletList);
-          /*          const { data: getBilletArchive } = await axios.request({
-              method: "get",
-              url: "/get_boleto",
-              data: {
-                boletos: "",
-                juro: "N",
-                multa: "N",
-                atualiza_boleto: "arquivo",
-                base64: "S",
-              },
-            });
-  */
+          /*  */
           return msg.reply("Lógica de segunda via do boleto");
         }
         if (body === "2") {
+          const { data: getBilletArchive } = await axios.request({
+            method: "get",
+            url: "/get_boleto",
+            data: {
+              boletos: "49735",
+              juro: "N",
+              multa: "N",
+              atualiza_boleto: "arquivo",
+              base64: "S",
+            },
+          });
+          console.log(getBilletArchive);
           return msg.reply("Lógica de confirmar pagamento");
         }
       }
