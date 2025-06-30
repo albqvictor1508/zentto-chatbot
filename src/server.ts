@@ -18,10 +18,10 @@ const formatCpf = (cpf: string) => {
 };
 const sayGrace = (date: Date): string => {
   const hour = date.getHours();
-  if (hour >= 6 || hour < 12) return "Bom dia!";
+  if (hour >= 6 && hour < 12) return "Bom dia!";
   return "Boa tarde!";
 };
-const actualYear = new Date().getFullYear();
+const ACTUAL_YEAR = new Date().getFullYear();
 
 app.setSerializerCompiler(serializerCompiler);
 app.setValidatorCompiler(validatorCompiler);
@@ -36,7 +36,6 @@ whatsappClient.on("qr", (qr: string) => {
 whatsappClient.on("ready", async () => {
   try {
     console.log("Client is connected!");
-    console.log(actualYear);
   } catch (error) {
     console.log(error);
     throw error;
