@@ -19,6 +19,7 @@ const instance = axios.create({
     ixcsoft: "listar",
     Authorization: `Basic ${IXC_TOKEN}`,
     "Content-Type": "application/json",
+    Cookie: 'IXC_Session = nuf31qft9acm787sj8alovhhen',
   },
 });
 

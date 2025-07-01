@@ -16,12 +16,13 @@ const userStates = new Map<string, ChatData>();
 const formatCpf = (cpf: string) => {
   return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
 };
+
 const sayGrace = (date: Date): string => {
   const hour = date.getHours();
   if (hour >= 6 && hour < 12) return "Bom dia!";
   return "Boa tarde!";
 };
-const ACTUAL_YEAR = new Date().getFullYear();
+const ACTUAL_DATE = new Date();
 
 app.setSerializerCompiler(serializerCompiler);
 app.setValidatorCompiler(validatorCompiler);
@@ -44,12 +45,8 @@ whatsappClient.on("ready", async () => {
 whatsappClient.on("message", async (msg) => {
   const chatId = msg.from;
   const body = msg.body.trim();
-  if (msg.from.includes("@g.us") || msg.from === "status@broadcast") return; // pra n responder grupo
 
-  if (body === "!ping") {
-    return msg.reply("pong");
-  }
-
+  if (chatId !== "120363420137790776@g.us") return; // WARN: APAGAR ISSO DEPOIS
 
   if (body === "!care") {
     userStates.set(chatId, { step: 1, data: {} });
@@ -86,7 +83,7 @@ Antes de começarmos, digite o CPF no qual está ligada ao plano de internet, e 
             query: cpfValidated,
             oper: "=",
             page: "1",
-            rp: 5,
+            rp: 5, //WARN: DIMINUIR ISSO OU REFATORAR LÁ EMBAIXO PRA N USAR "registros[0]"
             sortname: "cliente.id",
             sortorder: "desc",
           },
@@ -148,20 +145,27 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
       if (userState.data.block === Block.ONE) {
         if (body === "1") {
           const { data: getBilletList } = await axios.request({
-            method: "get",
+            method: "GET",
             url: "/fn_areceber",
             data: {
               qtype: "fn_areceber.id_cliente",
               query: userState.data.id,
               oper: "=",
-              rp: "1",
-              sortname: "asc",
-              sortorder: "fn_areceber.data_vencimento",
-            },
+              page: "1",
+              rp: "4",
+              sortname: "fn_areceber.id",
+              sortorder: "asc"
+            }
+          });
+          const actualBillets = getBilletList.registros.filter(billet => {
+            //TODO: VER EM QUAL DOS DADOS RETORNADOS TÁ O STATUS SE FOI PAGO OU NÃO, PRA FILTRAR ASSIM
+            const billetDate = new Date(billet.data_final);
+            console.log("BILLET DATE", billetDate);
+            console.log("ACTUAL DATE", ACTUAL_DATE.getFullYear());
+            return billetDate.getFullYear() === ACTUAL_DATE.getFullYear();
           });
 
-          console.log(getBilletList);
-          /*  */
+          console.log(actualBillets);
           return msg.reply("Lógica de segunda via do boleto");
         }
         if (body === "2") {
