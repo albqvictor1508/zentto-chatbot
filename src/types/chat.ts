@@ -9,6 +9,16 @@ export type ChatData = {
   };
 };
 
+export type BilletSchema = {
+  id: string,
+  valor: number,
+  status: string,
+  dataVencimento: string
+  dataEmissao: string,
+  liberado: string
+  number?: number
+};
+
 /*
 export type DefaultQuery = {
   page: string;

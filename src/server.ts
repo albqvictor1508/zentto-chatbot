@@ -8,7 +8,7 @@ import {
   type ZodTypeProvider,
 } from "fastify-type-provider-zod";
 import qrcode from "qrcode-terminal";
-import { Block, type ChatData } from "./types/chat";
+import { BilletSchema, Block, type ChatData } from "./types/chat";
 
 const app = fastify().withTypeProvider<ZodTypeProvider>();
 const userStates = new Map<string, ChatData>();
@@ -23,6 +23,8 @@ const sayGrace = (date: Date): string => {
   return "Boa tarde!";
 };
 const ACTUAL_DATE = new Date();
+const THREE_MONTHS_LATER = new Date(ACTUAL_DATE);
+THREE_MONTHS_LATER.setMonth(ACTUAL_DATE.getMonth() + 3);
 
 app.setSerializerCompiler(serializerCompiler);
 app.setValidatorCompiler(validatorCompiler);
@@ -152,22 +154,39 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
               query: userState.data.id,
               oper: "=",
               page: "1",
-              rp: "4",
-              sortname: "fn_areceber.id",
+              rp: "200000",
+              sortname: "fn_areceber.data_vencimento",
               sortorder: "asc"
             }
           });
-          const actualBillets = getBilletList.registros.filter(billet => {
-            //TODO: VER EM QUAL DOS DADOS RETORNADOS TÁ O STATUS SE FOI PAGO OU NÃO, PRA FILTRAR ASSIM
-            const billetDate = new Date(billet.data_final);
-            console.log("BILLET DATE", billetDate);
-            console.log("ACTUAL DATE", ACTUAL_DATE.getFullYear());
-            return billetDate.getFullYear() === ACTUAL_DATE.getFullYear();
+          //TODO: VER EM QUAL DOS DADOS RETORNADOS TÁ O STATUS SE FOI PAGO OU NÃO, PRA FILTRAR ASSIM
+          //WARN: SE NÃO TIVER PARCELAS DESSE ANO, SINAL QUE FOI DESATIVADO
+          const actualBillets: BilletSchema[] = getBilletList.registros.filter((billet: { data_final: string, data_emissao: string, data_vencimento: string }) => {
+            const billetDate = new Date(billet.data_vencimento);
+            return billetDate >= ACTUAL_DATE && billetDate < THREE_MONTHS_LATER;
+
+          }).map(billet => {
+            return {
+              id: billet.id,
+              valor: billet.valor,
+              status: billet.status,
+              dataVencimento: billet.data_vencimento,
+              dataEmissao: billet.data_emissao,
+              liberado: billet.liberado
+            };
           });
 
-          console.log(actualBillets);
+
+          for (let i = 0; i < actualBillets.length; i++) {
+            console.log("===========================");
+            actualBillets[i].number = i + 1;
+            console.log(actualBillets[i]);
+            console.log("===========================");
+          }
+
           return msg.reply("Lógica de segunda via do boleto");
         }
+        //TODO: pegar o id do boleto selecionado para colocar nessa rota de puxar o arquivo 
         if (body === "2") {
           const { data: getBilletArchive } = await axios.request({
             method: "get",
