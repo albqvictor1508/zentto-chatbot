@@ -1,3 +1,4 @@
+
 export type ChatData = {
   step: number;
   data: {
@@ -19,6 +20,12 @@ export type BilletSchema = {
   number?: number
 };
 
+export const status = {
+  RECEIVED: "R",
+  TO_RECEIVE: "A",
+  PARCIAL: "P",
+  CANCELLED: "C"
+} as const;
 /*
 export type DefaultQuery = {
   page: string;

@@ -8,7 +8,7 @@ import {
   type ZodTypeProvider,
 } from "fastify-type-provider-zod";
 import qrcode from "qrcode-terminal";
-import { BilletSchema, Block, type ChatData } from "./types/chat";
+import { BilletSchema, Block, status, type ChatData } from "./types/chat";
 
 const app = fastify().withTypeProvider<ZodTypeProvider>();
 const userStates = new Map<string, ChatData>();
@@ -159,11 +159,9 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
               sortorder: "asc"
             }
           });
-          //TODO: VALIDAR QUAIS BOLETOS JÁ FORAM PAGOS
-          const actualBillets: BilletSchema[] = getBilletList.registros.filter((billet: { data_final: string, data_emissao: string, data_vencimento: string }) => {
+          const actualBillets: BilletSchema[] = getBilletList.registros.filter((billet: { status: string, data_final: string, data_emissao: string, data_vencimento: string }) => {
             const billetDate = new Date(billet.data_vencimento);
-            return billetDate >= ACTUAL_DATE && billetDate < THREE_MONTHS_LATER;
-
+            return billetDate >= ACTUAL_DATE && billetDate < THREE_MONTHS_LATER && billet.status === status.TO_RECEIVE;
           }).map(billet => {
             return {
               id: billet.id,
@@ -176,10 +174,12 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
           });
 
           //TODO: BOLAR UM WORKFLOW CASO NÃO TENHA NENHUM BOLETO ATUAL
-          if (actualBillets.length === 0) return msg.reply("Você não possui boletos atuais, deseja falar com o suporte?");
+
+          if (actualBillets.length === 0) return msg.reply("Você não possui boletos a receber, deseja falar com o suporte?");
 
 
           //TODO: VALIDAR SE FOI PAGO
+
           if (actualBillets.length === 1) {
             const billetId = actualBillets[0].id;
             const { data: getBilletArchive } = await axios.request({
@@ -197,26 +197,33 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
             console.log(getBilletArchive);
             return msg.reply("lógica se houver apenas 1 boleto atual");
           }
-
           for (let i = 0; i < actualBillets.length; i++) {
             actualBillets[i].number = i + 1;
           }
-          /* FORMATO DESEJADO.
-           *
-           * number. {dados do boleto}
-           * number. {dados do boleto}
-           *
-           * */
-          return msg.reply("Lógica de segunda via do boleto");
+
+          const billetList = actualBillets
+            .map((billet) => {
+              const statusDescription = billet.status === status.TO_RECEIVE ? "A pagar" : null;
+
+              const [year, month, day] = billet.dataVencimento.split('T')[0].split('-');
+              const formattedDate = `${day}/${month}/${year}`;
+
+              return `${billet.number}. *Valor: R$ ${billet.valor}* | Vencimento: ${formattedDate} | Status: ${statusDescription ?? "Erro"}`;
+            })
+            .join("\n");
+
+          const replyMessage = `Você possui ${actualBillets.length} boletos. Escolha o número do boleto para receber a 2ª via:\n\n${billetList}`;
+
+          return msg.reply(replyMessage);
         }
         //TODO: pegar o number do boleto selecionado para colocar nessa rota de puxar o arquivo 
         if (body === "2") {
           return msg.reply("Lógica de confirmar pagamento");
         }
+        userState.data.block = Block.THREE;
+        userState.step++;
+        return msg.reply("É nois cara, vou te passar pro atendimento");
       }
-      userState.data.block = Block.THREE;
-      userState.step++;
-      return msg.reply("É nois cara, vou te passar pro atendimento");
     }
   }
 });
