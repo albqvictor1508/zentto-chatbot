@@ -159,8 +159,7 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
               sortorder: "asc"
             }
           });
-          //TODO: VER EM QUAL DOS DADOS RETORNADOS TÁ O STATUS SE FOI PAGO OU NÃO, PRA FILTRAR ASSIM
-          //WARN: SE NÃO TIVER PARCELAS DESSE ANO, SINAL QUE FOI DESATIVADO
+          //TODO: VALIDAR QUAIS BOLETOS JÁ FORAM PAGOS
           const actualBillets: BilletSchema[] = getBilletList.registros.filter((billet: { data_final: string, data_emissao: string, data_vencimento: string }) => {
             const billetDate = new Date(billet.data_vencimento);
             return billetDate >= ACTUAL_DATE && billetDate < THREE_MONTHS_LATER;
@@ -176,30 +175,42 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
             };
           });
 
+          //TODO: BOLAR UM WORKFLOW CASO NÃO TENHA NENHUM BOLETO ATUAL
+          if (actualBillets.length === 0) return msg.reply("Você não possui boletos atuais, deseja falar com o suporte?");
 
-          for (let i = 0; i < actualBillets.length; i++) {
-            console.log("===========================");
-            actualBillets[i].number = i + 1;
-            console.log(actualBillets[i]);
-            console.log("===========================");
+
+          //TODO: VALIDAR SE FOI PAGO
+          if (actualBillets.length === 1) {
+            const billetId = actualBillets[0].id;
+            const { data: getBilletArchive } = await axios.request({
+              method: "get",
+              url: "/get_boleto",
+              data: {
+                boletos: billetId,
+                juro: "N",
+                multa: "N",
+                atualiza_boleto: "arquivo",
+                base64: "S",
+              },
+            });
+
+            console.log(getBilletArchive);
+            return msg.reply("lógica se houver apenas 1 boleto atual");
           }
 
+          for (let i = 0; i < actualBillets.length; i++) {
+            actualBillets[i].number = i + 1;
+          }
+          /* FORMATO DESEJADO.
+           *
+           * number. {dados do boleto}
+           * number. {dados do boleto}
+           *
+           * */
           return msg.reply("Lógica de segunda via do boleto");
         }
-        //TODO: pegar o id do boleto selecionado para colocar nessa rota de puxar o arquivo 
+        //TODO: pegar o number do boleto selecionado para colocar nessa rota de puxar o arquivo 
         if (body === "2") {
-          const { data: getBilletArchive } = await axios.request({
-            method: "get",
-            url: "/get_boleto",
-            data: {
-              boletos: "49735",
-              juro: "N",
-              multa: "N",
-              atualiza_boleto: "arquivo",
-              base64: "S",
-            },
-          });
-          console.log(getBilletArchive);
           return msg.reply("Lógica de confirmar pagamento");
         }
       }
