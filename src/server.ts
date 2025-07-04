@@ -9,7 +9,7 @@ import {
 } from "fastify-type-provider-zod";
 import qrcode from "qrcode-terminal";
 import { ChatState, type ChatData } from "./types/chat";
-import { getBillets } from "./functions/get-billets";
+import { getBilletResponse, getBillets } from "./functions/get-billets";
 
 const app = fastify().withTypeProvider<ZodTypeProvider>();
 const userStates = new Map<string, ChatData>();
@@ -31,6 +31,7 @@ app.setValidatorCompiler(validatorCompiler);
 
 const whatsappClient = new Client({ authStrategy: new LocalAuth() });
 
+//WARN: ADICIONAR O ASSUNTO PRA FACILITAR O SUPORTE, DA PRA CRIAR UM OBJETO BASEADO NO STATE
 async function handleTalkToAttendant(chatId: string, userState: ChatData) {
   try {
     if (!ATTENDANT_GROUP_CHAT_ID) {
@@ -64,12 +65,12 @@ whatsappClient.on("ready", async () => {
   }
 });
 
-whatsappClient.on("message", async (msg: Message): Promise<void> => {
+whatsappClient.on("message", async (msg: Message) => {
   const chatId = msg.from;
   const body = msg.body.trim();
 
   try {
-    if (body === "!care" && chatId !== ATTENDANT_GROUP_CHAT_ID) {
+    if (body === "!care" && chatId === "120363420137790776@g.us") {
       const context: ChatData = {
         state: ChatState.AWAITING_CPF,
         data: {},
@@ -202,6 +203,7 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
           return;
         }
 
+        console.log(billet.id);
         const { data: getBilletArchive } = await axios.request({
           method: "get",
           url: "/get_boleto",
@@ -209,30 +211,29 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
             boletos: billet.id,
             juro: "N",
             multa: "N",
-            atualiza_boleto: "arquivo",
+            atualiza_boleto: "N",
+            tipo_boleto: "arquivo",
             base64: "S",
           },
         });
 
-        const media = new MessageMedia(
-          "application/pdf",
-          getBilletArchive.base64,
-          `boleto-${billet.id}.pdf`,
-        );
+        console.log(getBilletArchive);
+        //const base64Data = getBilletArchive.base64.split('base64,')[1] || getBilletArchive.base64;
 
-        await whatsappClient.sendMessage(chatId, media);
+        await whatsappClient.sendMessage(chatId, "olha o log");
         return;
       }
     }
   } catch (error) {
+    console.error(error);
     const userState = userStates.get(chatId);
 
     if (!userState) {
-      console.error(error);
       throw error;
     }
 
-    await handleTalkToAttendant(chatId, userState);
+    await whatsappClient.sendMessage(chatId, "Erro no bot, você será direcionado ao atendimento!");
+    //await handleTalkToAttendant(chatId, userState);
   }
 });
 
