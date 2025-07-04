@@ -9,12 +9,13 @@ import {
 } from "fastify-type-provider-zod";
 import qrcode from "qrcode-terminal";
 import { ChatState, type ChatData } from "./types/chat";
-import { getBilletResponse, getBillets } from "./functions/get-billets";
+import { getBillets } from "./functions/get-billets";
 
 const app = fastify().withTypeProvider<ZodTypeProvider>();
 const userStates = new Map<string, ChatData>();
 
 const ATTENDANT_GROUP_CHAT_ID = "120363421978310576@g.us";
+const TEST_GROUP_ID = "120363420137790776@g.us";
 
 const formatCpf = (cpf: string) => {
   return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
@@ -68,9 +69,10 @@ whatsappClient.on("ready", async () => {
 whatsappClient.on("message", async (msg: Message) => {
   const chatId = msg.from;
   const body = msg.body.trim();
+  console.log(chatId);
 
   try {
-    if (body === "!care" && chatId === "120363420137790776@g.us") {
+    if (body === "!care" && chatId === TEST_GROUP_ID) {
       const context: ChatData = {
         state: ChatState.AWAITING_CPF,
         data: {},
