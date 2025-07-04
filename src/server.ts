@@ -184,7 +184,10 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
             }
           })
 
-          console.log(loginData);
+          const { ativo, online } = loginData;
+
+          //WARN: CHECAR ESSA RESPOSTA AQUI PRA DAR UM STATUS DAORA
+
           await whatsappClient.sendMessage(chatId, "Bloco de ver o status da internet");
           return;
         }
