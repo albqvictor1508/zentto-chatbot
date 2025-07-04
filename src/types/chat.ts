@@ -14,7 +14,7 @@ export enum ChatState {
   FINANCIAL_AWAITING_SUBMENU_CHOICE, // 2ª via, confirmar pgto
   FINANCIAL_AWAITING_BILLET_CHOICE,  // Mostrou a lista de boletos e aguarda a escolha
   INTERNET_STATUS_REQUESTED,         // Usuário pediu status da internet
-  TALK_TO_ATTENDANT_REQUESTED        // Usuário pediu para falar com atendente
+  TALK_TO_ATTENDANT_REQUESTED,     // Usuário pediu para falar com atendente
 }
 
 export type ChatData = {

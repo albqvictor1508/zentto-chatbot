@@ -145,22 +145,24 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
       return msg.reply("É nois cara, vou te passar pro atendimento");
     }
     case ChatState.FINANCIAL_AWAITING_BILLET_CHOICE: {
-      if (userState.data.block === Block.ONE) {
-        if (body === "1") {
-          return await getBillets({ msg, userState });
-        }
-        //TODO: pegar o number do boleto selecionado para colocar nessa rota de puxar o arquivo 
-        if (body === "2") {
-          return msg.reply("Lógica de confirmar pagamento");
-        }
-        userState.state = ChatState.TALK_TO_ATTENDANT_REQUESTED;
-        return msg.reply("É nois cara, vou te passar pro atendimento");
+      if (body === "1") {
+        userState.state = ChatState.FINANCIAL_GET_BILLETS_REQUESTED;
+        return await getBillets({ msg, userState });
       }
+      //TODO: pegar o number do boleto selecionado para colocar nessa rota de puxar o arquivo 
+      if (body === "2") {
+        userState.state = ChatState.FINANCIAL_CONFIRM_PAYMENT_REQUESTED;
+        return msg.reply("Lógica de confirmar pagamento");
+      }
+      userState.state = ChatState.TALK_TO_ATTENDANT_REQUESTED;
+      return msg.reply("É nois cara, vou te passar pro atendimento");
     }
-    case 4: {
-      if (userState.data.block === Block.ONE) {
+    case ChatState.FINANCIAL_CONFIRM_PAYMENT_REQUESTED: {
+      //caso precise de mais opções nesses 2 cenários
+    }
 
-      }
+    case ChatState.FINANCIAL_GET_BILLETS_REQUESTED: {
+      //caso precise de mais opções nesses 2 cenários
     }
   }
 });
