@@ -14,9 +14,6 @@ import { getBillets } from "./functions/get-billets";
 const app = fastify().withTypeProvider<ZodTypeProvider>();
 const userStates = new Map<string, ChatData>();
 
-// TODO: Adicionar o ID do grupo de atendimento
-const ATTENDANT_GROUP_CHAT_ID = "";
-
 const formatCpf = (cpf: string) => {
   return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
 };
@@ -48,6 +45,8 @@ whatsappClient.on("ready", async () => {
 
 whatsappClient.on("message", async (msg: Message): Promise<Message | undefined> => {
   try {
+    // TODO: Adicionar o ID do grupo de atendimento
+    const ATTENDANT_GROUP_CHAT_ID = "";
     const chatId = msg.from;
     const body = msg.body.trim();
 
