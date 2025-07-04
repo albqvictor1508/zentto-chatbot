@@ -135,6 +135,39 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
       if (body === "2") {
         userState.state = ChatState.INTERNET_STATUS_REQUESTED;
         //simples, só preciso saber como posso fazer essa query pra api do ixc
+        const { data: contractData } = await axios.request({
+          method: "get",
+          url: "/radusuarios",
+          data: {
+            qtype: "radusuarios.id",
+            query: userState.data.id,
+            oper: "=",
+            page: "1",
+            rp: "200000",
+            sortname: "radusuarios.id",
+            sortorder: "desc"
+          }
+        })
+
+        // pego o id do contrato por essa rota de cima, jogo na rota de baixo e pego o status e se ele tá online
+
+        /*
+    'ativo' => 'S',
+    'online' => 'SS',
+         * */
+        const { data: loginStatus } = await axios.request({
+          method: "get",
+          url: "/radusuarios",
+          data: {
+            qtype: "radusuarios.id",
+            query: "", //id do login,
+            oper: "=",
+            page: "1",
+            rp: "200000",
+            sortname: "radusuarios.id",
+            sortorder: "desc"
+          }
+        })
         return msg.reply("Bloco de ver o status da internet");
       }
 
