@@ -104,6 +104,7 @@ Antes de começarmos, digite o CPF no qual está ligada ao plano de internet, e 
         userState.data.cpf = cpfValidated;
         userState.data.name = data.registros[0].fantasia;
         userState.data.id = data.registros[0].id;
+        userState.data.phone = msg.from.split("@")[0];
         userState.state = ChatState.AWAITING_MAIN_MENU_CHOICE;
         return msg.reply(`
 Olá ${userState.data.name}, Como posso ajudar ?
@@ -196,6 +197,12 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
 
     case ChatState.FINANCIAL_GET_BILLETS_REQUESTED: {
       //caso precise de mais opções nesses 2 cenários
+    }
+
+
+    //WARN: criar um grupo pra o bot enviar quem tá precisando de ajuda do atendente
+    case ChatState.TALK_TO_ATTENDANT_REQUESTED: {
+      return whatsappClient.sendMessage("salve", `O cliente ${userState.data.name}, Telefone: ${userState.data.phone} precisa da sua ajuda!`);
     }
   }
 });
