@@ -168,6 +168,23 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
         }
         if (body === "2") {
           userState.state = ChatState.INTERNET_STATUS_REQUESTED;
+
+          //WARN: contract data
+          const { data: loginData } = await axios.request({
+            method: "get",
+            url: "/radusuarios",
+            data: {
+              qtype: "radusuarios.id_cliente",
+              query: userState.data.id,
+              oper: "=",
+              page: "1",
+              rp: "1",
+              sortname: "radusuarios.id",
+              sortorder: "desc"
+            }
+          })
+
+          console.log(loginData);
           await whatsappClient.sendMessage(chatId, "Bloco de ver o status da internet");
           return;
         }
