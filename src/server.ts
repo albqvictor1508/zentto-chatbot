@@ -65,10 +65,10 @@ whatsappClient.on("ready", async () => {
 });
 
 whatsappClient.on("message", async (msg: Message): Promise<void> => {
-  try {
-    const chatId = msg.from;
-    const body = msg.body.trim();
+  const chatId = msg.from;
+  const body = msg.body.trim();
 
+  try {
     if (body === "!care" && chatId !== ATTENDANT_GROUP_CHAT_ID) {
       const context: ChatData = {
         state: ChatState.AWAITING_CPF,
@@ -90,55 +90,54 @@ whatsappClient.on("message", async (msg: Message): Promise<void> => {
 
     switch (userState.state) {
       case ChatState.AWAITING_CPF: {
-        try {
-          if (body === "1") {
-            userState.state = ChatState.AWAITING_MAIN_MENU_CHOICE;
-            await whatsappClient.sendMessage(
-              chatId,
-              "Quer fazer plano com nois paizão, R$ 89,90 por 2KB de internet!",
-            );
-            return;
-          }
-          const cpfRegex = /^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$/;
-
-          if (!cpfRegex.test(body)) {
-            await whatsappClient.sendMessage(
-              chatId,
-              "CPF inválido, tente novamente ou digite *1* para realizar um novo cadastro!",
-            );
-            return;
-          }
-          const cpfValidated = formatCpf(body);
-          const { data } = await axios.request({
-            method: "get",
-            url: "/cliente",
-            data: {
-              qtype: "cnpj_cpf",
-              query: cpfValidated,
-              oper: "=",
-              page: "1",
-              rp: "1",
-              sortname: "cliente.id",
-              sortorder: "desc",
-            },
-          });
-
-          if (!data.registros) {
-            await whatsappClient.sendMessage(
-              chatId,
-              "Não existe nenhum cliente cadastrado com esse CPF, Envie um CPF novamente ou digite 1 para realizar cadastro",
-            );
-            return;
-          }
-          userState.data.cpf = cpfValidated;
-          userState.data.name = data.registros[0].fantasia;
-          userState.data.id = data.registros[0].id;
-          //WARN: ISSO AQUI TA ERRADO, RESOLVER!!
-          userState.data.phone = msg.from.split("@")[0];
+        if (body === "1") {
           userState.state = ChatState.AWAITING_MAIN_MENU_CHOICE;
           await whatsappClient.sendMessage(
             chatId,
-            `
+            "Quer fazer plano com nois paizão, R$ 89,90 por 2KB de internet!",
+          );
+          return;
+        }
+        const cpfRegex = /^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$/;
+
+        if (!cpfRegex.test(body)) {
+          await whatsappClient.sendMessage(
+            chatId,
+            "CPF inválido, tente novamente ou digite *1* para realizar um novo cadastro!",
+          );
+          return;
+        }
+        const cpfValidated = formatCpf(body);
+        const { data } = await axios.request({
+          method: "get",
+          url: "/cliente",
+          data: {
+            qtype: "cnpj_cpf",
+            query: cpfValidated,
+            oper: "=",
+            page: "1",
+            rp: "1",
+            sortname: "cliente.id",
+            sortorder: "desc",
+          },
+        });
+
+        if (!data.registros) {
+          await whatsappClient.sendMessage(
+            chatId,
+            "Não existe nenhum cliente cadastrado com esse CPF, Envie um CPF novamente ou digite 1 para realizar cadastro",
+          );
+          return;
+        }
+        userState.data.cpf = cpfValidated;
+        userState.data.name = data.registros[0].fantasia;
+        userState.data.id = data.registros[0].id;
+        //WARN: ISSO AQUI TA ERRADO, RESOLVER!!
+        userState.data.phone = msg.from.split("@")[0];
+        userState.state = ChatState.AWAITING_MAIN_MENU_CHOICE;
+        await whatsappClient.sendMessage(
+          chatId,
+          `
 Olá ${userState.data.name}, Como posso ajudar ?
 
 1 - Analisar status financeiro.
@@ -147,11 +146,7 @@ Olá ${userState.data.name}, Como posso ajudar ?
 
 Digite o número da opção desejada.
 `,
-          );
-        } catch (error) {
-          console.error(error);
-          await whatsappClient.sendMessage(chatId, "Erro no bot");
-        }
+        );
         return;
       }
       case ChatState.AWAITING_MAIN_MENU_CHOICE: {
@@ -230,8 +225,14 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
       }
     }
   } catch (error) {
-    console.error(error);
-    throw error;
+    const userState = userStates.get(chatId);
+
+    if (!userState) {
+      console.error(error);
+      throw error;
+    }
+
+    await handleTalkToAttendant(chatId, userState);
   }
 });
 
