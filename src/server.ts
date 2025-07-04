@@ -69,7 +69,6 @@ whatsappClient.on("ready", async () => {
 whatsappClient.on("message", async (msg: Message) => {
   const chatId = msg.from;
   const body = msg.body.trim();
-  console.log(chatId);
 
   try {
     if (body === "!care" && chatId === TEST_GROUP_ID) {
@@ -205,7 +204,18 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
           return;
         }
 
-        console.log(billet.id);
+        const { data: getBilletData } = await axios.request({
+          method: "get",
+          url: "/get_boleto",
+          data: {
+            boletos: billet.id,
+            juro: "N",
+            multa: "N",
+            atualiza_boleto: "N",
+            tipo_boleto: "dados",
+          },
+        });
+
         const { data: getBilletArchive } = await axios.request({
           method: "get",
           url: "/get_boleto",
@@ -219,10 +229,15 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
           },
         });
 
-        console.log(getBilletArchive);
-        //const base64Data = getBilletArchive.base64.split('base64,')[1] || getBilletArchive.base64;
+        //WARN: valor_boleto dentro de getBilletData mostra o valor do boleto e o id do cliente até, 
+        //da pra integrar com gateway de pagamento pra pix
+        const billetResponse = {};
+        console.log(getBilletData);
+        const base64Data = getBilletArchive.split('base64,')[1] || getBilletArchive;
 
-        await whatsappClient.sendMessage(chatId, "olha o log");
+        const media = new MessageMedia("application/pdf", base64Data, `boleto-${billet.id}.pdf`);
+
+        await whatsappClient.sendMessage(chatId, media);
         return;
       }
     }
