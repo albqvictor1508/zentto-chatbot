@@ -1,5 +1,4 @@
-import { Message } from "whatsapp-web.js";
-import { string } from "zod";
+import { Client } from "whatsapp-web.js";
 
 export type UserData = {
   id?: string;
@@ -25,7 +24,7 @@ export type ChatData = {
   data: UserData,
   currentStateData: {
     billets?: BilletSchema[]
-    billetResponse: ({ billets, proporse }: { billets: BilletSchema[], proporse: string }) => string;
+    billetResponse?: string
   }
 };
 
@@ -41,7 +40,8 @@ export type BilletSchema = {
 
 export type DefaultParams = {
   userState: ChatData;
-  msg: Message;
+  whatsappClient: Client;
+  chatId: string
 }
 
 export const status = {

@@ -183,13 +183,15 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
       case ChatState.FINANCIAL_AWAITING_BILLET_CHOICE: {
         if (body === "1") {
           userState.state = ChatState.FINANCIAL_GET_BILLETS_REQUESTED;
-          return await getBillets({ msg, userState });
+          return await getBillets({ msg, chatId, userState });
         }
         //TODO: pegar o number do boleto selecionado para colocar nessa rota de puxar o arquivo 
         if (body === "2") {
           userState.state = ChatState.FINANCIAL_CONFIRM_PAYMENT_REQUESTED;
           return msg.reply("Lógica de confirmar pagamento");
         }
+
+
         userState.state = ChatState.TALK_TO_ATTENDANT_REQUESTED;
         return msg.reply("É nois cara, vou te passar pro atendimento");
       }
@@ -203,7 +205,7 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
         const billets = userState.currentStateData.billets;
         if (!billets) throw new Error("Actual billets is empty in FINANCIAL_GET_BILLETS_REQUESTED");
         const billet = billets.filter(billet => billet.number === num)[0];
-
+        return whatsappClient.sendMessage(chatId,);
       }
 
 
