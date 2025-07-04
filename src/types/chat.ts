@@ -17,12 +17,7 @@ export enum ChatState {
   TALK_TO_ATTENDANT_REQUESTED        // Usuário pediu para falar com atendente
 }
 
-
 export type ChatData = {
-  block: {
-    name: string,
-    step: number,
-  }
   state: ChatState,
   data: UserData,
   currentStateData?: {

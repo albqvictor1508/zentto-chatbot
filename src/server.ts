@@ -8,7 +8,7 @@ import {
   type ZodTypeProvider,
 } from "fastify-type-provider-zod";
 import qrcode from "qrcode-terminal";
-import { Block, type ChatData } from "./types/chat";
+import { Block, ChatState, type ChatData } from "./types/chat";
 import { getBillets } from "./functions/get-billets";
 
 const app = fastify().withTypeProvider<ZodTypeProvider>();
@@ -52,7 +52,12 @@ whatsappClient.on("message", async (msg: Message): Promise<Message | undefined> 
   if (chatId !== "120363420137790776@g.us") return; // WARN: APAGAR ISSO DEPOIS
 
   if (body === "!care") {
-    userStates.set(chatId, { step: 1, data: {} });
+    const context: ChatData = {
+      state: ChatState.AWAITING_CPF,
+      data: {},
+      currentStateData: {}
+    }
+    userStates.set(chatId, context);
     return msg.reply(`${sayGrace(new Date())} 👋, Sou o *Zentto*, seu assistente virtual! Vamos resolver o que você precisa rapidinho. Como posso ajudar?
 
 Antes de começarmos, digite o CPF no qual está ligada ao plano de internet, e se ainda não é um cliente, digite 1
@@ -62,11 +67,11 @@ Antes de começarmos, digite o CPF no qual está ligada ao plano de internet, e 
   const userState = userStates.get(chatId);
   if (!userState) return;
 
-  switch (userState.step) {
-    case 1: {
+  switch (userState.state) {
+    case ChatState.AWAITING_CPF: {
       try {
         if (body === "1") {
-          userState.step++;
+          userState.state = ChatState.AWAITING_MAIN_MENU_CHOICE;
           return msg.reply(
             "Quer fazer plano com nois paizão, R$ 89,90 por 2KB de internet!",
           );
@@ -86,13 +91,11 @@ Antes de começarmos, digite o CPF no qual está ligada ao plano de internet, e 
             query: cpfValidated,
             oper: "=",
             page: "1",
-            rp: 5, //WARN: DIMINUIR ISSO OU REFATORAR LÁ EMBAIXO PRA N USAR "registros[0]"
+            rp: "1", //WARN: DIMINUIR ISSO OU REFATORAR LÁ EMBAIXO PRA N USAR "registros[0]"
             sortname: "cliente.id",
             sortorder: "desc",
           },
         });
-        console.log(data.registros ? data.registros.length : "não tem");
-        console.log("CPF VALIDATED: %s", cpfValidated);
 
         if (!data.registros)
           return msg.reply(
@@ -101,7 +104,7 @@ Antes de começarmos, digite o CPF no qual está ligada ao plano de internet, e 
         userState.data.cpf = cpfValidated;
         userState.data.name = data.registros[0].fantasia;
         userState.data.id = data.registros[0].id;
-        userState.step++;
+        userState.state = ChatState.AWAITING_MAIN_MENU_CHOICE;
         return msg.reply(`
 Olá ${userState.data.name}, Como posso ajudar ?
 
@@ -116,10 +119,9 @@ Digite o número da opção desejada.
         return msg.reply("Erro no bot");
       }
     }
-    case 2: {
+    case ChatState.FINANCIAL_AWAITING_SUBMENU_CHOICE: {
       if (body === "1") {
-        userState.data.block = Block.ONE;
-        userState.step++;
+        userState.state = ChatState.FINANCIAL_AWAITING_SUBMENU_CHOICE;
         return msg.reply(`
 BLOCO DE ANALISAR STATUS FINANCEIRO!
 
@@ -131,20 +133,18 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
         //e nois dois, ter um tratamento caso não haja nenhum boleto em aberto
       }
       if (body === "2") {
-        userState.step++;
-        userState.data.block = Block.TWO;
+        userState.state = ChatState.INTERNET_STATUS_REQUESTED;
         //simples, só preciso saber como posso fazer essa query pra api do ixc
         return msg.reply("Bloco de ver o status da internet");
       }
-      userState.data.block = Block.THREE;
-      userState.step++;
+
+      userState.state = ChatState.TALK_TO_ATTENDANT_REQUESTED;
       if (body === "3") {
         return msg.reply("Bloco de falar com o atendente");
       }
       return msg.reply("É nois cara, vou te passar pro atendimento");
     }
-    case 3: {
-      userState.step++;
+    case ChatState.FINANCIAL_AWAITING_BILLET_CHOICE: {
       if (userState.data.block === Block.ONE) {
         if (body === "1") {
           return await getBillets({ msg, userState });
@@ -153,8 +153,7 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
         if (body === "2") {
           return msg.reply("Lógica de confirmar pagamento");
         }
-        userState.data.block = Block.THREE;
-        userState.step++;
+        userState.state = ChatState.TALK_TO_ATTENDANT_REQUESTED;
         return msg.reply("É nois cara, vou te passar pro atendimento");
       }
     }
