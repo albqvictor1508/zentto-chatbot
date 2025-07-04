@@ -1,11 +1,11 @@
 import axios from "../db/axios.ts";
-import { BilletSchema, status } from "../types/chat.ts";
+import { BilletSchema, ChatState, DefaultParams, status } from "../types/chat.ts";
 
 const ACTUAL_DATE = new Date();
 const THREE_MONTHS_LATER = new Date(ACTUAL_DATE);
 THREE_MONTHS_LATER.setMonth(ACTUAL_DATE.getMonth() + 3);
 
-export async function getBillets({ userState, msg }) {
+export async function getBillets({ userState, msg }: DefaultParams) {
   const { data: getBilletList } = await axios.request({
     method: "GET",
     url: "/fn_areceber",
@@ -58,20 +58,25 @@ export async function getBillets({ userState, msg }) {
     actualBillets[i].number = i + 1;
   }
 
-  const billetList = actualBillets
-    .map((billet) => {
-      const statusDescription = billet.status === status.TO_RECEIVE ? "A pagar" : null;
+  function getBilletResponse({ billets, proporse }: { billets: BilletSchema[], proporse: string }): string {
+    const billetList = billets
+      .map((billet) => {
+        const statusDescription = billet.status === status.TO_RECEIVE ? "A pagar" : null;
 
-      const [year, month, day] = billet.dataVencimento.split('T')[0].split('-');
-      const formattedDate = `${day}/${month}/${year}`;
+        const [year, month, day] = billet.dataVencimento.split('T')[0].split('-');
+        const formattedDate = `${day}/${month}/${year}`;
 
-      return `${billet.number}. *Valor: R$ ${billet.valor}* | Vencimento: ${formattedDate} | Status: ${statusDescription ?? "Erro"}`;
-    })
-    .join("\n");
+        return `${billet.number}. *Valor: R$ ${billet.valor}* | Vencimento: ${formattedDate} | Status: ${statusDescription ?? "Erro"}`;
+      })
+      .join("\n");
 
-  const replyMessage = `Você possui ${actualBillets.length} boletos. Escolha o número do boleto para receber a 2ª via:\n\n${billetList}`;
-
-  return msg.reply(replyMessage);
+    //posso usar essa mesma response pra segunda via e pagamento pra manter o padrão
+    return `Você possui ${actualBillets.length} boletos. Escolha o número do boleto para ${proporse}:\n\n${billetList}`;
+  }
+  userState.state = ChatState.FINANCIAL_GET_BILLETS_REQUESTED;
+  userState.currentStateData.billets = actualBillets;
+  userState.currentStateData.billetResponse = getBilletResponse;
+  return msg.reply(getBilletResponse({ billets: actualBillets, proporse: "realizar o pagamento" }));
 }
 
 

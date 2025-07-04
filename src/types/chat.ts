@@ -1,11 +1,12 @@
 import { Message } from "whatsapp-web.js";
+import { string } from "zod";
 
 export type UserData = {
+  id?: string;
   name?: string;
   cpf?: string;
   phone?: string;
   block?: Block;
-  id?: string;
 }
 
 export enum ChatState {
@@ -22,8 +23,9 @@ export enum ChatState {
 export type ChatData = {
   state: ChatState,
   data: UserData,
-  currentStateData?: {
+  currentStateData: {
     billets?: BilletSchema[]
+    billetResponse: ({ billets, proporse }: { billets: BilletSchema[], proporse: string }) => string;
   }
 };
 
@@ -38,8 +40,8 @@ export type BilletSchema = {
 };
 
 export type DefaultParams = {
-  userState: Map<string, ChatData>;
-  message: Message;
+  userState: ChatData;
+  msg: Message;
 }
 
 export const status = {

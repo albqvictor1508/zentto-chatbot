@@ -46,67 +46,69 @@ whatsappClient.on("ready", async () => {
   }
 });
 whatsappClient.on("message", async (msg: Message): Promise<Message | undefined> => {
-  const chatId = msg.from;
-  const body = msg.body.trim();
+  try {
 
-  if (chatId !== "120363420137790776@g.us") return; // WARN: APAGAR ISSO DEPOIS
+    const chatId = msg.from;
+    const body = msg.body.trim();
 
-  if (body === "!care") {
-    const context: ChatData = {
-      state: ChatState.AWAITING_CPF,
-      data: {},
-      currentStateData: {}
-    }
-    userStates.set(chatId, context);
-    return msg.reply(`${sayGrace(new Date())} 👋, Sou o *Zentto*, seu assistente virtual! Vamos resolver o que você precisa rapidinho. Como posso ajudar?
+    if (chatId !== "120363420137790776@g.us") return; // WARN: APAGAR ISSO DEPOIS
+
+    if (body === "!care") {
+      const context: ChatData = {
+        state: ChatState.AWAITING_CPF,
+        data: {},
+        currentStateData: {}
+      }
+      userStates.set(chatId, context);
+      return msg.reply(`${sayGrace(new Date())} 👋, Sou o *Zentto*, seu assistente virtual! Vamos resolver o que você precisa rapidinho. Como posso ajudar?
 
 Antes de começarmos, digite o CPF no qual está ligada ao plano de internet, e se ainda não é um cliente, digite 1
 		`);
-  }
+    }
 
-  const userState = userStates.get(chatId);
-  if (!userState) return;
+    const userState = userStates.get(chatId);
+    if (!userState) return;
 
-  switch (userState.state) {
-    case ChatState.AWAITING_CPF: {
-      try {
-        if (body === "1") {
+    switch (userState.state) {
+      case ChatState.AWAITING_CPF: {
+        try {
+          if (body === "1") {
+            userState.state = ChatState.AWAITING_MAIN_MENU_CHOICE;
+            return msg.reply(
+              "Quer fazer plano com nois paizão, R$ 89,90 por 2KB de internet!",
+            );
+          }
+          const cpfRegex = /^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$/;
+
+          if (!cpfRegex.test(body))
+            return msg.reply(
+              "CPF inválido, tente novamente ou digite *1* para realizar um novo cadastro!",
+            );
+          const cpfValidated = formatCpf(body);
+          const { data } = await axios.request({
+            method: "get",
+            url: "/cliente",
+            data: {
+              qtype: "cnpj_cpf",
+              query: cpfValidated,
+              oper: "=",
+              page: "1",
+              rp: "1", //WARN: DIMINUIR ISSO OU REFATORAR LÁ EMBAIXO PRA N USAR "registros[0]"
+              sortname: "cliente.id",
+              sortorder: "desc",
+            },
+          });
+
+          if (!data.registros)
+            return msg.reply(
+              "Não existe nenhum cliente cadastrado com esse CPF, Envie um CPF novamente ou digite 1 para realizar cadastro",
+            );
+          userState.data.cpf = cpfValidated;
+          userState.data.name = data.registros[0].fantasia;
+          userState.data.id = data.registros[0].id;
+          userState.data.phone = msg.from.split("@")[0];
           userState.state = ChatState.AWAITING_MAIN_MENU_CHOICE;
-          return msg.reply(
-            "Quer fazer plano com nois paizão, R$ 89,90 por 2KB de internet!",
-          );
-        }
-        const cpfRegex = /^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$/;
-
-        if (!cpfRegex.test(body))
-          return msg.reply(
-            "CPF inválido, tente novamente ou digite *1* para realizar um novo cadastro!",
-          );
-        const cpfValidated = formatCpf(body);
-        const { data } = await axios.request({
-          method: "get",
-          url: "/cliente",
-          data: {
-            qtype: "cnpj_cpf",
-            query: cpfValidated,
-            oper: "=",
-            page: "1",
-            rp: "1", //WARN: DIMINUIR ISSO OU REFATORAR LÁ EMBAIXO PRA N USAR "registros[0]"
-            sortname: "cliente.id",
-            sortorder: "desc",
-          },
-        });
-
-        if (!data.registros)
-          return msg.reply(
-            "Não existe nenhum cliente cadastrado com esse CPF, Envie um CPF novamente ou digite 1 para realizar cadastro",
-          );
-        userState.data.cpf = cpfValidated;
-        userState.data.name = data.registros[0].fantasia;
-        userState.data.id = data.registros[0].id;
-        userState.data.phone = msg.from.split("@")[0];
-        userState.state = ChatState.AWAITING_MAIN_MENU_CHOICE;
-        return msg.reply(`
+          return msg.reply(`
 Olá ${userState.data.name}, Como posso ajudar ?
 
 1 - Analisar status financeiro.
@@ -115,95 +117,104 @@ Olá ${userState.data.name}, Como posso ajudar ?
 
 Digite o número da opção desejada.
 `);
-      } catch (error) {
-        console.error(error);
-        return msg.reply("Erro no bot");
+        } catch (error) {
+          console.error(error);
+          return msg.reply("Erro no bot");
+        }
       }
-    }
-    case ChatState.FINANCIAL_AWAITING_SUBMENU_CHOICE: {
-      if (body === "1") {
-        userState.state = ChatState.FINANCIAL_AWAITING_SUBMENU_CHOICE;
-        return msg.reply(`
+      case ChatState.FINANCIAL_AWAITING_SUBMENU_CHOICE: {
+        if (body === "1") {
+          userState.state = ChatState.FINANCIAL_AWAITING_SUBMENU_CHOICE;
+          return msg.reply(`
 BLOCO DE ANALISAR STATUS FINANCEIRO!
 
 1 - Segunda via do boleto.
 2 - Confirmar pagamento.
 					`);
-        // 1: Se tiver um só boleto, retorna esse boleto em PDF, se tiver mais de um, lista os boleto e pergunta qual ele quer pagar
-        // 2: Se tiver um só boleto, confirma de cara se foi pago, senão, lista os boletos e pergunta qual ele pagou
-        //e nois dois, ter um tratamento caso não haja nenhum boleto em aberto
-      }
-      if (body === "2") {
-        userState.state = ChatState.INTERNET_STATUS_REQUESTED;
-        //simples, só preciso saber como posso fazer essa query pra api do ixc
-        const { data: contractData } = await axios.request({
-          method: "get",
-          url: "/radusuarios",
-          data: {
-            qtype: "radusuarios.id",
-            query: userState.data.id,
-            oper: "=",
-            page: "1",
-            rp: "200000",
-            sortname: "radusuarios.id",
-            sortorder: "desc"
-          }
-        })
+          // 1: Se tiver um só boleto, retorna esse boleto em PDF, se tiver mais de um, lista os boleto e pergunta qual ele quer pagar
+          // 2: Se tiver um só boleto, confirma de cara se foi pago, senão, lista os boletos e pergunta qual ele pagou
+          //e nois dois, ter um tratamento caso não haja nenhum boleto em aberto
+        }
+        if (body === "2") {
+          userState.state = ChatState.INTERNET_STATUS_REQUESTED;
+          //simples, só preciso saber como posso fazer essa query pra api do ixc
+          const { data: contractData } = await axios.request({
+            method: "get",
+            url: "/radusuarios",
+            data: {
+              qtype: "radusuarios.id",
+              query: userState.data.id,
+              oper: "=",
+              page: "1",
+              rp: "200000",
+              sortname: "radusuarios.id",
+              sortorder: "desc"
+            }
+          })
 
-        // pego o id do contrato por essa rota de cima, jogo na rota de baixo e pego o status e se ele tá online
+          // pego o id do contrato por essa rota de cima, jogo na rota de baixo e pego o status e se ele tá online
 
-        /*
-    'ativo' => 'S',
-    'online' => 'SS',
-         * */
-        const { data: loginStatus } = await axios.request({
-          method: "get",
-          url: "/radusuarios",
-          data: {
-            qtype: "radusuarios.id",
-            query: "", //id do login,
-            oper: "=",
-            page: "1",
-            rp: "200000",
-            sortname: "radusuarios.id",
-            sortorder: "desc"
-          }
-        })
-        return msg.reply("Bloco de ver o status da internet");
+          /*
+      'ativo' => 'S',
+      'online' => 'SS',
+           * */
+          const { data: loginStatus } = await axios.request({
+            method: "get",
+            url: "/radusuarios",
+            data: {
+              qtype: "radusuarios.id",
+              query: "", //id do login,
+              oper: "=",
+              page: "1",
+              rp: "200000",
+              sortname: "radusuarios.id",
+              sortorder: "desc"
+            }
+          })
+          return msg.reply("Bloco de ver o status da internet");
+        }
+
+        userState.state = ChatState.TALK_TO_ATTENDANT_REQUESTED;
+        if (body === "3") {
+          return msg.reply("Bloco de falar com o atendente");
+        }
+        return msg.reply("É nois cara, vou te passar pro atendimento");
+      }
+      case ChatState.FINANCIAL_AWAITING_BILLET_CHOICE: {
+        if (body === "1") {
+          userState.state = ChatState.FINANCIAL_GET_BILLETS_REQUESTED;
+          return await getBillets({ msg, userState });
+        }
+        //TODO: pegar o number do boleto selecionado para colocar nessa rota de puxar o arquivo 
+        if (body === "2") {
+          userState.state = ChatState.FINANCIAL_CONFIRM_PAYMENT_REQUESTED;
+          return msg.reply("Lógica de confirmar pagamento");
+        }
+        userState.state = ChatState.TALK_TO_ATTENDANT_REQUESTED;
+        return msg.reply("É nois cara, vou te passar pro atendimento");
+      }
+      case ChatState.FINANCIAL_CONFIRM_PAYMENT_REQUESTED: {
+
       }
 
-      userState.state = ChatState.TALK_TO_ATTENDANT_REQUESTED;
-      if (body === "3") {
-        return msg.reply("Bloco de falar com o atendente");
-      }
-      return msg.reply("É nois cara, vou te passar pro atendimento");
-    }
-    case ChatState.FINANCIAL_AWAITING_BILLET_CHOICE: {
-      if (body === "1") {
-        userState.state = ChatState.FINANCIAL_GET_BILLETS_REQUESTED;
-        return await getBillets({ msg, userState });
-      }
-      //TODO: pegar o number do boleto selecionado para colocar nessa rota de puxar o arquivo 
-      if (body === "2") {
-        userState.state = ChatState.FINANCIAL_CONFIRM_PAYMENT_REQUESTED;
-        return msg.reply("Lógica de confirmar pagamento");
-      }
-      userState.state = ChatState.TALK_TO_ATTENDANT_REQUESTED;
-      return msg.reply("É nois cara, vou te passar pro atendimento");
-    }
-    case ChatState.FINANCIAL_CONFIRM_PAYMENT_REQUESTED: {
       //caso precise de mais opções nesses 2 cenários
-    }
+      case ChatState.FINANCIAL_GET_BILLETS_REQUESTED: {
+        const num = Number(body);
+        const billets = userState.currentStateData.billets;
+        if (!billets) throw new Error("Actual billets is empty in FINANCIAL_GET_BILLETS_REQUESTED");
+        const billet = billets.filter(billet => billet.number === num)[0];
 
-    case ChatState.FINANCIAL_GET_BILLETS_REQUESTED: {
-      //caso precise de mais opções nesses 2 cenários
-    }
+      }
 
 
-    //WARN: criar um grupo pra o bot enviar quem tá precisando de ajuda do atendente
-    case ChatState.TALK_TO_ATTENDANT_REQUESTED: {
-      return whatsappClient.sendMessage("salve", `O cliente ${userState.data.name}, Telefone: ${userState.data.phone} precisa da sua ajuda!`);
+      //WARN: criar um grupo pra o bot enviar quem tá precisando de ajuda do atendente
+      case ChatState.TALK_TO_ATTENDANT_REQUESTED: {
+        return whatsappClient.sendMessage("salve", `O cliente ${userState.data.name}, Telefone: ${userState.data.phone} precisa da sua ajuda!`);
+      }
     }
+  } catch (error) {
+    console.error(error);
+    throw error;
   }
 });
 
