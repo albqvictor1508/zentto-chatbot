@@ -23,8 +23,7 @@ export type ChatData = {
   state: ChatState,
   data: UserData,
   currentStateData: {
-    billets?: BilletSchema[]
-    billetResponse?: string
+    billets?: BilletSchema[],
   }
 };
 

@@ -1,5 +1,5 @@
 import { fastify } from "fastify";
-import { Client, LocalAuth, Message } from "whatsapp-web.js";
+import { Client, LocalAuth, Message, MessageMedia } from "whatsapp-web.js";
 import chalk from "chalk";
 import axios from "./db/axios";
 import {
@@ -8,11 +8,14 @@ import {
   type ZodTypeProvider,
 } from "fastify-type-provider-zod";
 import qrcode from "qrcode-terminal";
-import { Block, ChatState, type ChatData } from "./types/chat";
+import { ChatState, type ChatData } from "./types/chat";
 import { getBillets } from "./functions/get-billets";
 
 const app = fastify().withTypeProvider<ZodTypeProvider>();
 const userStates = new Map<string, ChatData>();
+
+// TODO: Adicionar o ID do grupo de atendimento
+const ATTENDANT_GROUP_CHAT_ID = "";
 
 const formatCpf = (cpf: string) => {
   return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
@@ -23,9 +26,6 @@ const sayGrace = (date: Date): string => {
   if (hour >= 6 && hour < 12) return "Bom dia!";
   return "Boa tarde!";
 };
-const ACTUAL_DATE = new Date();
-const THREE_MONTHS_LATER = new Date(ACTUAL_DATE);
-THREE_MONTHS_LATER.setMonth(ACTUAL_DATE.getMonth() + 3);
 
 app.setSerializerCompiler(serializerCompiler);
 app.setValidatorCompiler(validatorCompiler);
@@ -45,9 +45,9 @@ whatsappClient.on("ready", async () => {
     throw error;
   }
 });
+
 whatsappClient.on("message", async (msg: Message): Promise<Message | undefined> => {
   try {
-
     const chatId = msg.from;
     const body = msg.body.trim();
 
@@ -57,13 +57,15 @@ whatsappClient.on("message", async (msg: Message): Promise<Message | undefined> 
       const context: ChatData = {
         state: ChatState.AWAITING_CPF,
         data: {},
-        currentStateData: {}
-      }
+        currentStateData: {},
+      };
       userStates.set(chatId, context);
-      return msg.reply(`${sayGrace(new Date())} 👋, Sou o *Zentto*, seu assistente virtual! Vamos resolver o que você precisa rapidinho. Como posso ajudar?
-
-Antes de começarmos, digite o CPF no qual está ligada ao plano de internet, e se ainda não é um cliente, digite 1
-		`);
+      return whatsappClient.sendMessage(
+        chatId,
+        `${sayGrace(
+          new Date(),
+        )} 👋, Sou o *Zentto*, seu assistente virtual! Vamos resolver o que você precisa rapidinho. Como posso ajudar?\n\nAntes de começarmos, digite o CPF no qual está ligada ao plano de internet, e se ainda não é um cliente, digite 1\n\t\t`,
+      );
     }
 
     const userState = userStates.get(chatId);
@@ -74,16 +76,19 @@ Antes de começarmos, digite o CPF no qual está ligada ao plano de internet, e 
         try {
           if (body === "1") {
             userState.state = ChatState.AWAITING_MAIN_MENU_CHOICE;
-            return msg.reply(
+            return whatsappClient.sendMessage(
+              chatId,
               "Quer fazer plano com nois paizão, R$ 89,90 por 2KB de internet!",
             );
           }
           const cpfRegex = /^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$/;
 
-          if (!cpfRegex.test(body))
-            return msg.reply(
+          if (!cpfRegex.test(body)) {
+            return whatsappClient.sendMessage(
+              chatId,
               "CPF inválido, tente novamente ou digite *1* para realizar um novo cadastro!",
             );
+          }
           const cpfValidated = formatCpf(body);
           const { data } = await axios.request({
             method: "get",
@@ -93,22 +98,26 @@ Antes de começarmos, digite o CPF no qual está ligada ao plano de internet, e 
               query: cpfValidated,
               oper: "=",
               page: "1",
-              rp: "1", //WARN: DIMINUIR ISSO OU REFATORAR LÁ EMBAIXO PRA N USAR "registros[0]"
+              rp: "1",
               sortname: "cliente.id",
               sortorder: "desc",
             },
           });
 
-          if (!data.registros)
-            return msg.reply(
+          if (!data.registros) {
+            return whatsappClient.sendMessage(
+              chatId,
               "Não existe nenhum cliente cadastrado com esse CPF, Envie um CPF novamente ou digite 1 para realizar cadastro",
             );
+          }
           userState.data.cpf = cpfValidated;
           userState.data.name = data.registros[0].fantasia;
           userState.data.id = data.registros[0].id;
           userState.data.phone = msg.from.split("@")[0];
           userState.state = ChatState.AWAITING_MAIN_MENU_CHOICE;
-          return msg.reply(`
+          return whatsappClient.sendMessage(
+            chatId,
+            `
 Olá ${userState.data.name}, Como posso ajudar ?
 
 1 - Analisar status financeiro.
@@ -116,28 +125,28 @@ Olá ${userState.data.name}, Como posso ajudar ?
 3 - Falar com atendente.
 
 Digite o número da opção desejada.
-`);
+`,
+          );
         } catch (error) {
           console.error(error);
-          return msg.reply("Erro no bot");
+          return whatsappClient.sendMessage(chatId, "Erro no bot");
         }
       }
       case ChatState.FINANCIAL_AWAITING_SUBMENU_CHOICE: {
         if (body === "1") {
           userState.state = ChatState.FINANCIAL_AWAITING_SUBMENU_CHOICE;
-          return msg.reply(`
+          return whatsappClient.sendMessage(
+            chatId,
+            `
 BLOCO DE ANALISAR STATUS FINANCEIRO!
 
 1 - Segunda via do boleto.
 2 - Confirmar pagamento.
-					`);
-          // 1: Se tiver um só boleto, retorna esse boleto em PDF, se tiver mais de um, lista os boleto e pergunta qual ele quer pagar
-          // 2: Se tiver um só boleto, confirma de cara se foi pago, senão, lista os boletos e pergunta qual ele pagou
-          //e nois dois, ter um tratamento caso não haja nenhum boleto em aberto
+					`,
+          );
         }
         if (body === "2") {
           userState.state = ChatState.INTERNET_STATUS_REQUESTED;
-          //simples, só preciso saber como posso fazer essa query pra api do ixc
           const { data: contractData } = await axios.request({
             method: "get",
             url: "/radusuarios",
@@ -148,16 +157,10 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
               page: "1",
               rp: "200000",
               sortname: "radusuarios.id",
-              sortorder: "desc"
-            }
-          })
+              sortorder: "desc",
+            },
+          });
 
-          // pego o id do contrato por essa rota de cima, jogo na rota de baixo e pego o status e se ele tá online
-
-          /*
-      'ativo' => 'S',
-      'online' => 'SS',
-           * */
           const { data: loginStatus } = await axios.request({
             method: "get",
             url: "/radusuarios",
@@ -168,50 +171,70 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
               page: "1",
               rp: "200000",
               sortname: "radusuarios.id",
-              sortorder: "desc"
-            }
-          })
-          return msg.reply("Bloco de ver o status da internet");
+              sortorder: "desc",
+            },
+          });
+          return whatsappClient.sendMessage(chatId, "Bloco de ver o status da internet");
         }
 
         userState.state = ChatState.TALK_TO_ATTENDANT_REQUESTED;
         if (body === "3") {
-          return msg.reply("Bloco de falar com o atendente");
+          return whatsappClient.sendMessage(chatId, "Bloco de falar com o atendente");
         }
-        return msg.reply("É nois cara, vou te passar pro atendimento");
+        return whatsappClient.sendMessage(chatId, "É nois cara, vou te passar pro atendimento");
       }
       case ChatState.FINANCIAL_AWAITING_BILLET_CHOICE: {
         if (body === "1") {
           userState.state = ChatState.FINANCIAL_GET_BILLETS_REQUESTED;
-          return await getBillets({ msg, chatId, userState });
+          return await getBillets({ userState, chatId, whatsappClient });
         }
-        //TODO: pegar o number do boleto selecionado para colocar nessa rota de puxar o arquivo 
         if (body === "2") {
           userState.state = ChatState.FINANCIAL_CONFIRM_PAYMENT_REQUESTED;
-          return msg.reply("Lógica de confirmar pagamento");
+          return whatsappClient.sendMessage(chatId, "Lógica de confirmar pagamento");
         }
 
-
         userState.state = ChatState.TALK_TO_ATTENDANT_REQUESTED;
-        return msg.reply("É nois cara, vou te passar pro atendimento");
+        return whatsappClient.sendMessage(chatId, "É nois cara, vou te passar pro atendimento");
       }
-      case ChatState.FINANCIAL_CONFIRM_PAYMENT_REQUESTED: {
-
-      }
-
-      //caso precise de mais opções nesses 2 cenários
       case ChatState.FINANCIAL_GET_BILLETS_REQUESTED: {
         const num = Number(body);
         const billets = userState.currentStateData.billets;
         if (!billets) throw new Error("Actual billets is empty in FINANCIAL_GET_BILLETS_REQUESTED");
-        const billet = billets.filter(billet => billet.number === num)[0];
-        return whatsappClient.sendMessage(chatId,);
+        const billet = billets.find((billet) => billet.number === num);
+        if (!billet) {
+          return whatsappClient.sendMessage(chatId, "Número do boleto inválido. Tente novamente.");
+        }
+
+        const { data: getBilletArchive } = await axios.request({
+          method: "get",
+          url: "/get_boleto",
+          data: {
+            boletos: billet.id,
+            juro: "N",
+            multa: "N",
+            atualiza_boleto: "arquivo",
+            base64: "S",
+          },
+        });
+        console.log(getBilletArchive.base64);
+
+        const media = new MessageMedia(
+          "application/pdf",
+          getBilletArchive.base64,
+          `boleto-${billet.id}.pdf`,
+        );
+
+        return whatsappClient.sendMessage(chatId, media);
       }
-
-
-      //WARN: criar um grupo pra o bot enviar quem tá precisando de ajuda do atendente
       case ChatState.TALK_TO_ATTENDANT_REQUESTED: {
-        return whatsappClient.sendMessage("salve", `O cliente ${userState.data.name}, Telefone: ${userState.data.phone} precisa da sua ajuda!`);
+        if (!ATTENDANT_GROUP_CHAT_ID) {
+          console.error("ATTENDANT_GROUP_CHAT_ID não está configurado.");
+          return whatsappClient.sendMessage(chatId, "Não foi possível contatar um atendente. Tente novamente mais tarde.");
+        }
+        return whatsappClient.sendMessage(
+          ATTENDANT_GROUP_CHAT_ID,
+          `O cliente ${userState.data.name}, Telefone: ${userState.data.phone} precisa da sua ajuda!`,
+        );
       }
     }
   } catch (error) {
