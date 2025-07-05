@@ -233,34 +233,43 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
       }
 
       case ChatState.FINANCIAL_TRUST_UNLOCKING_REQUESTED: {
-        if (body === "confiança") {
-          const { data: loginData } = await axios.request({
-            method: "get",
-            url: "/radusuarios",
-            data: {
-              qtype: "radusuarios.id_cliente",
-              query: userState.data.id,
-              oper: "=",
-              page: "1",
-              rp: "1",
-              sortname: "radusuarios.id",
-              sortorder: "desc"
-            }
-          })
-          //PEGO O ID DO CONTRATO E JOGO NA QUERY DE DEBLOQUEIO DE CONFIANÇA
-          console.log(loginData);
+        if (body !== "confiança") return;
 
-          const { data: trustUnlocking } = await axios.request({
-            method: "get",
-            url: "desbloqueio_confianca",
-            data: {
-              id: ""
-            }
-          })
-        }
+        const { data: loginData } = await axios.request({
+          method: "get",
+          url: "/radusuarios",
+          data: {
+            qtype: "radusuarios.id_cliente",
+            query: userState.data.id,
+            oper: "=",
+            page: "1",
+            rp: "1",
+            sortname: "radusuarios.id",
+            sortorder: "desc"
+          }
+        })
+
+        const { ativo, id_contrato } = loginData.registros[0];
+
+        if (ativo === "S") return await whatsappClient.sendMessage(chatId, "Você não pode recorrer ao Desbloqueio de confiança se seu contrato estiver ativo!");
+
+        const { data: trustUnlocking } = await axios.request({
+          method: "get",
+          url: "desbloqueio_confianca",
+          data: {
+            id: id_contrato
+          }
+        })
+
+        console.log(trustUnlocking); //WARN: TESTAR ISSO COM UM USUÁRIO COM O CONTRATO DESATIVO
+        return;
       }
 
       case ChatState.FINANCIAL_GET_BILLETS_REQUESTED: {
+        console.log("entrei aq por algum motivo");
+        //WARN: validar outro tipo de entrada
+
+        userState.state = ChatState.FINANCIAL_TRUST_UNLOCKING_REQUESTED;
         const num = Number(body);
         const billets = userState.currentStateData.billets;
         if (!billets) throw new Error("Actual billets is empty in FINANCIAL_GET_BILLETS_REQUESTED");
@@ -282,7 +291,7 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
             tipo_boleto: "dados",
           },
         });
-*/
+      */
         const { data: getBilletArchive } = await axios.request({
           method: "get",
           url: "/get_boleto",
@@ -299,7 +308,6 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
         const base64Data = getBilletArchive.split('base64,')[1] || getBilletArchive;
         const media = new MessageMedia("application/pdf", base64Data, `boleto-${billet.id}.pdf`);
 
-        userState.state = ChatState.FINANCIAL_TRUST_UNLOCKING_REQUESTED;
         await whatsappClient.sendMessage(chatId, media);
         //WARN: isso aqui pode ser melhorado!
         await whatsappClient.sendMessage(chatId, "Aqui está o boleto, você consegue realizar o pagamento lendo o código de barras diretamente do aplicativo do seu banco! Digite \"confiança\" para garantir o bloqueio de confiança.");
