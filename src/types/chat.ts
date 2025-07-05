@@ -17,6 +17,7 @@ export enum ChatState {
   TALK_TO_ATTENDANT_REQUESTED,     // Usuário pediu para falar com atendente
   FINANCIAL_CONFIRM_PAYMENT_REQUESTED,  // Mostrou a lista de boletos e aguarda a escolha
   FINANCIAL_GET_BILLETS_REQUESTED,
+  FINANCIAL_TRUST_UNLOCKING_REQUESTED
 }
 
 export type ChatData = {

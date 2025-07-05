@@ -17,6 +17,10 @@ const userStates = new Map<string, ChatData>();
 const ATTENDANT_GROUP_CHAT_ID = "120363421978310576@g.us";
 const TEST_GROUP_ID = "120363420137790776@g.us";
 
+const ACTUAL_DATE = new Date();
+const THREE_DAYS_LATER = new Date(ACTUAL_DATE);
+THREE_DAYS_LATER.setDate(ACTUAL_DATE.getDay() + 3);
+
 const formatCpf = (cpf: string) => {
   return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
 };
@@ -169,7 +173,6 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
         if (body === "2") {
           userState.state = ChatState.INTERNET_STATUS_REQUESTED;
 
-          //WARN: contract data
           const { data: loginData } = await axios.request({
             method: "get",
             url: "/radusuarios",
@@ -186,10 +189,17 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
 
           const { ativo, online } = loginData;
 
-          //WARN: CHECAR ESSA RESPOSTA AQUI PRA DAR UM STATUS DAORA
+          if (ativo === "S" && online === "N") {
+            return await whatsappClient.sendMessage(chatId, "Notei aqui que sua conta está ativa, mas seu roteador não está conectado à nossa central no momento. Vamos fazer algumas verificações rápidas que costumam resolver isso:\n\n1️⃣ **Confira se o seu roteador (o aparelho da internet) está ligado na tomada** e com as luzes acesas.\n\n2️⃣ **Verifique se o cabo da fibra óptica (aquele fio mais fino e sensível) está bem encaixado** tanto no roteador quanto na caixinha na parede, sem nenhuma dobra forte ou dano aparente.\n\n3️⃣ Se estiver tudo certo, **retire o roteador da tomada, aguarde 30 segundos e ligue novamente.**\n\nSe após esses passos a conexão não voltar, pode ser um problema em nossa rede externa. Me avise para que eu possa abrir um chamado para nossa equipe técnica.");
+          }
 
-          await whatsappClient.sendMessage(chatId, "Bloco de ver o status da internet");
-          return;
+          if (ativo === "N" && online === "N") {
+            await whatsappClient.sendMessage(chatId, "Verifiquei em nosso sistema e identifiquei que seu acesso à internet está bloqueado. Isso geralmente ocorre por alguma pendência financeira.\n\nPara regularizar a situação e reativar sua conexão, entrarei em contato com um de nossos atendentes.");
+            await handleTalkToAttendant(chatId, userState);
+            return;
+          }
+
+          return await whatsappClient.sendMessage(chatId, "Verifiquei aqui e sua conexão com a nossa central está ativa e funcionando normalmente. Isso significa que o sinal da internet está chegando corretamente até o seu roteador.\n\nNa maioria das vezes, o problema pode ser resolvido reiniciando o aparelho que você usa para navegar (celular ou computador) e também o seu roteador. Por favor, *retire o roteador da tomada, aguarde 30 segundos e ligue-o novamente.*\n\nSe mesmo assim não funcionar, digite 3 para entrar em contato com atendente");
         }
         if (body === "3") {
           await handleTalkToAttendant(chatId, userState);
@@ -214,6 +224,42 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
         }
         return;
       }
+      case ChatState.INTERNET_STATUS_REQUESTED: {
+        if (body === "3") {
+          await whatsappClient.sendMessage(chatId, "Estou entrando em contato contato com uns dos nossos atendentes.");
+          return await handleTalkToAttendant(chatId, userState);
+        }
+        return;
+      }
+
+      case ChatState.FINANCIAL_TRUST_UNLOCKING_REQUESTED: {
+        if (body === "confiança") {
+          const { data: loginData } = await axios.request({
+            method: "get",
+            url: "/radusuarios",
+            data: {
+              qtype: "radusuarios.id_cliente",
+              query: userState.data.id,
+              oper: "=",
+              page: "1",
+              rp: "1",
+              sortname: "radusuarios.id",
+              sortorder: "desc"
+            }
+          })
+          //PEGO O ID DO CONTRATO E JOGO NA QUERY DE DEBLOQUEIO DE CONFIANÇA
+          console.log(loginData);
+
+          const { data: trustUnlocking } = await axios.request({
+            method: "get",
+            url: "desbloqueio_confianca",
+            data: {
+              id: ""
+            }
+          })
+        }
+      }
+
       case ChatState.FINANCIAL_GET_BILLETS_REQUESTED: {
         const num = Number(body);
         const billets = userState.currentStateData.billets;
@@ -224,6 +270,7 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
           return;
         }
 
+        /*
         const { data: getBilletData } = await axios.request({
           method: "get",
           url: "/get_boleto",
@@ -235,7 +282,7 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
             tipo_boleto: "dados",
           },
         });
-
+*/
         const { data: getBilletArchive } = await axios.request({
           method: "get",
           url: "/get_boleto",
@@ -249,15 +296,17 @@ BLOCO DE ANALISAR STATUS FINANCEIRO!
           },
         });
 
-        //WARN: valor_boleto dentro de getBilletData mostra o valor do boleto e o id do cliente até, 
-        //da pra integrar com gateway de pagamento pra pix
-        const billetResponse = {};
-        console.log(getBilletData);
         const base64Data = getBilletArchive.split('base64,')[1] || getBilletArchive;
-
         const media = new MessageMedia("application/pdf", base64Data, `boleto-${billet.id}.pdf`);
 
+        userState.state = ChatState.FINANCIAL_TRUST_UNLOCKING_REQUESTED;
         await whatsappClient.sendMessage(chatId, media);
+        //WARN: isso aqui pode ser melhorado!
+        await whatsappClient.sendMessage(chatId, "Aqui está o boleto, você consegue realizar o pagamento lendo o código de barras diretamente do aplicativo do seu banco! Digite \"confiança\" para garantir o bloqueio de confiança.");
+
+        //WARN: IMPLEMENTAR DESBLOQUEIO DE 72H, PRA "FINGIR" QUE O PAGAMENTO CAIU ATÉ QUE ELE REALMENTE CAIA 
+        // SE NÃO CAIR, BLOQUEIA DNV, SE CAIR DEIXA DESBLOQUEADO 
+        // SÓ PODE USAR 1 NO MÊS
         return;
       }
     }
